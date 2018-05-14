@@ -1,5 +1,5 @@
 import numpy
-
+import os
 MFile = "MFile"
 MTrk = "MTrk"
 TrkEnd = "TrkEnd"
@@ -46,7 +46,9 @@ def channel_merge(l_list):
 
 # analysis the midi txt,and return a list of pitch,start_time,end_time,start_vol,end_vol
 def analysis(midi_txt_name):
-    midi_file = open(midi_txt_name)
+    # Get Current Directory
+    cur_dir = os.path.split(os.path.realpath(__file__))[0]
+    midi_file = open(os.path.join(cur_dir,midi_txt_name))
     # lList is used for saving when the pitch is on and duration and vol start and vol end
     # l_list = [[0 for i in range(5)] for j in range(10000)]
     l_list = []
@@ -121,7 +123,7 @@ def analysis(midi_txt_name):
             elif temp[1] == Par:
                 continue
             else:
-                print "row[2] error" + temp[1]
+                print("row[2] error" + temp[1])
     midi_file.close()
     return l_list
 

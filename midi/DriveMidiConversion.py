@@ -1,3 +1,6 @@
+import sys
+
+sys.path.append('./midi')
 import os
 import commands
 import MidiFileAnalysis as mda, DataBaseInit as dbi
@@ -30,7 +33,9 @@ def init_midi():
 def extract(midi_label, frame_num):
     dbi.load_database("database.txt")
     file_list = []
-    fl = open("midi.config")
+    # Get Current Directory
+    cur_dir = os.path.split(os.path.realpath(__file__))[0]
+    fl = open(os.path.join(cur_dir, "midi.config"))
     for line in fl:
         temp = line.split()
         file_list.append(temp[1])
@@ -46,5 +51,5 @@ def extract(midi_label, frame_num):
 
 
 if __name__ == '__main__':
-    extract(3,96)
+    extract(3, 96)
     exit(0)
