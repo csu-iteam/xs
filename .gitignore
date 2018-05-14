@@ -12,3 +12,4 @@ extract_pose.error
 extract_pose.log
 .idea/
 midi/__pycache__/
+xsnet/__pycache__/
