@@ -3,7 +3,6 @@ import sys
 
 sys.path.append('./midi')
 import os
-import commands
 import MidiFileAnalysis as mda, DataBaseInit as dbi
 
 MIDI_SRC_PATH = "./midiSrc"
@@ -29,7 +28,7 @@ def init_midi():
                 tar_path = os.path.join(os.path.join(cur_dir,MIDI_TXT_PATH),name+'.txt')
                 cmd = cur_dir+'/'+MIDI_TO_TXT + MIDI_SRC_PATH + "/" + y + " > " + MIDI_TXT_PATH + "/" + name + ".txt"
                 cmd = cmd_path + ' ' + src_path + ' > '+tar_path
-                print('cmd',cmd)
+                # print('cmd',cmd)
                 os.system(cmd)
                 # commands.getstatusoutput(
                 #     MIDI_TO_TXT + MIDI_SRC_PATH + "/" + y + ">" + MIDI_TXT_PATH + "/" + name + ".txt")
