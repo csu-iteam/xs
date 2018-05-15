@@ -1,5 +1,6 @@
 import sys
 
+
 sys.path.append('./midi')
 import os
 import commands
@@ -22,8 +23,16 @@ def init_midi():
             for y in temp:
                 sl = y.split(".")
                 name = sl[0]
-                commands.getstatusoutput(
-                    MIDI_TO_TXT + MIDI_SRC_PATH + "/" + y + ">" + MIDI_TXT_PATH + "/" + name + ".txt")
+                cur_dir = os.path.split(os.path.realpath(__file__))[0]
+                cmd_path = os.path.join(cur_dir,MIDI_TO_TXT)
+                src_path = os.path.join(os.path.join(cur_dir,MIDI_SRC_PATH),y)
+                tar_path = os.path.join(os.path.join(cur_dir,MIDI_TXT_PATH),name+'.txt')
+                cmd = cur_dir+'/'+MIDI_TO_TXT + MIDI_SRC_PATH + "/" + y + " > " + MIDI_TXT_PATH + "/" + name + ".txt"
+                cmd = cmd_path + ' ' + src_path + ' > '+tar_path
+                print('cmd',cmd)
+                os.system(cmd)
+                # commands.getstatusoutput(
+                #     MIDI_TO_TXT + MIDI_SRC_PATH + "/" + y + ">" + MIDI_TXT_PATH + "/" + name + ".txt")
                 mc.write(str(label) + " " + name + ".txt" + "\n")
                 label += 1
     else:
@@ -51,5 +60,7 @@ def extract(midi_label, frame_num):
 
 
 if __name__ == '__main__':
-    extract(3, 96)
+    init_midi()
+    # for x in range(0):
+    # extract(0, 1500)
     exit(0)
