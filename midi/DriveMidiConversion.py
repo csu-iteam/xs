@@ -1,9 +1,10 @@
 import sys
 
-
 sys.path.append('./midi')
 import os
 import MidiFileAnalysis as mda, DataBaseInit as dbi
+
+fps = 12  # frame per second
 
 MIDI_SRC_PATH = "./midiSrc"
 MIDI_TXT_PATH = "./midiTxt"
@@ -23,11 +24,11 @@ def init_midi():
                 sl = y.split(".")
                 name = sl[0]
                 cur_dir = os.path.split(os.path.realpath(__file__))[0]
-                cmd_path = os.path.join(cur_dir,MIDI_TO_TXT)
-                src_path = os.path.join(os.path.join(cur_dir,MIDI_SRC_PATH),y)
-                tar_path = os.path.join(os.path.join(cur_dir,MIDI_TXT_PATH),name+'.txt')
-                cmd = cur_dir+'/'+MIDI_TO_TXT + MIDI_SRC_PATH + "/" + y + " > " + MIDI_TXT_PATH + "/" + name + ".txt"
-                cmd = cmd_path + ' ' + src_path + ' > '+tar_path
+                cmd_path = os.path.join(cur_dir, MIDI_TO_TXT)
+                src_path = os.path.join(os.path.join(cur_dir, MIDI_SRC_PATH), y)
+                tar_path = os.path.join(os.path.join(cur_dir, MIDI_TXT_PATH), name + '.txt')
+                cmd = cur_dir + '/' + MIDI_TO_TXT + MIDI_SRC_PATH + "/" + y + " > " + MIDI_TXT_PATH + "/" + name + ".txt"
+                cmd = cmd_path + ' ' + src_path + ' > ' + tar_path
                 # print('cmd',cmd)
                 os.system(cmd)
                 # commands.getstatusoutput(
@@ -48,18 +49,29 @@ def extract(midi_label, frame_num):
         temp = line.split()
         file_list.append(temp[1])
     midi_file = file_list[midi_label]
-    l_list = mda.analysis("midiTxt/" + midi_file)
+    cur_dir = os.path.split(os.path.realpath(__file__))[0]
+    l_list = mda.analysis(cur_dir + "/midiTxt/" + midi_file)
     l_list = mda.channel_merge(l_list)
-    label_list = dbi.make_data(l_list, frame_num)
+    label_list = dbi.make_data(fps, l_list, frame_num)
     dbi.export_database("database.txt")
     return label_list
 
 
-# def make_midi():
+def make_midi(midi_name, label_list):
+    mda.generate_head(midi_name)
+    for y in range(len(label_list)):
+        on_change = dbi.find_on_and_off(label_list[y])
+        position = mda.exchange_position(y, fps)
+        for i in on_change[0]:
+            mda.generate(midi_name, position, True, i, 100)
+        for i in on_change[1]:
+            mda.generate(midi_name, position, False, i, 60)
 
 
 if __name__ == '__main__':
-    init_midi()
+    for x in range(7):
+        extract(x, 1500)
+
     # for x in range(0):
     # extract(0, 1500)
     exit(0)

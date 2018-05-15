@@ -1,5 +1,5 @@
-import numpy
 import os
+
 MFile = "MFile"
 MTrk = "MTrk"
 TrkEnd = "TrkEnd"
@@ -13,6 +13,7 @@ Par = "Par"
 On = "On"
 Off = "Off"
 PrCh = "PrCh"
+TrkName = "TrkName"
 
 
 # return the value of n ,when receiving an input like str "n=x"
@@ -29,6 +30,13 @@ def exchange_time(position, dis, tempo):
     speed = 60000000 / tempo
     time = 1.0 * position / dis * speed * 10
     return int(round(time))
+
+
+# find the position of the pitch according to the steps and fps
+def exchange_position(step_num, fps):
+    time = step_num * 600 / fps
+    position = time * 480.0 / (60000000 / 625000) / 10
+    return position
 
 
 # divide vol into ten levels
@@ -48,13 +56,13 @@ def channel_merge(l_list):
 def analysis(midi_txt_name):
     # Get Current Directory
     cur_dir = os.path.split(os.path.realpath(__file__))[0]
-    midi_file = open(os.path.join(cur_dir,midi_txt_name))
+    midi_file = open(os.path.join(cur_dir, midi_txt_name))
     # lList is used for saving when the pitch is on and duration and vol start and vol end
     # l_list = [[0 for i in range(5)] for j in range(10000)]
     l_list = []
     l_point = 0
     # nList is used for saving which pitch has not end;
-    n_list = [0] * 100
+    n_list = [0] * 10000
 
     for line in midi_file:
         temp = line.split()
@@ -120,10 +128,16 @@ def analysis(midi_txt_name):
                 li = n_list[n]
                 l_list[li][2] = exchange_time(int(end_time), dis, tempo)
                 l_list[li][4] = divide_vol(v)
+            elif temp[1] == Tempo:
+                tempo = int(temp[2])
             elif temp[1] == Par:
                 continue
+            elif temp[1] == TimeSig:
+                continue
+            elif temp[1] == KeySig:
+                continue
             else:
-                print("row[2] error" + temp[1])
+                print("row[2] error" + temp[1] + midi_txt_name)
     midi_file.close()
     return l_list
 
@@ -142,3 +156,34 @@ def test_analysis():
 # if __name__ == '__main__':
 #     test_analysis()
 #     exit(0)
+
+def generate_head(music_name):
+    mf = open(music_name + ".txt", "w")
+    mf.write(MFile + " " + "1 4" + "480" + "\n")
+    mf.write(MTrk + "\n")
+    mf.write("0" + " " + Tempo + " " + "625000" + "\n")
+    mf.write("0" + " " + KeySig + " " + "0 major" + "\n")
+    mf.write("0" + " " + Meta + " " + SeqName + " \"" + music_name + "\"" + "\n")
+    mf.write("0" + " " + TimeSig + " " + "4/4" + " " + "24 8" + "\n")
+    mf.write("0" + " " + Meta + " " + TrkEnd + "\n")
+    mf.write(TrkEnd + "\n")
+    mf.write(MTrk + "\n")
+    mf.close()
+
+
+def generate(music_name, position, is_on, n, v):
+    mf = open(music_name + ".txt", "a")
+    if is_on:
+        mf.write(position + " " + On + " " + "ch=1" + " " + "n=" + n + " " + "v=" + v + "\n")
+    else:
+        mf.write(position + " " + Off + " " + "ch=1" + " " + "n=" + n + " " + "v=" + v + "\n")
+
+
+def generate_ending(music_name):
+    mf = open(music_name + ".txt", "a")
+    mf.write(TrkEnd + "\n")
+    mf.write(MTrk + "\n")
+    mf.write("0" + " " + Meta + " " + TrkName + "\"\\xffffffb1\\xffffffea\\xffffffbc\\xffffffc7\"" + "\n")
+    mf.write("0" + " " + Meta + " " + TrkEnd + "\n")
+    mf.write(TrkEnd)
+    mf.close()

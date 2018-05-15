@@ -1,8 +1,9 @@
 import os
 
-fps = 12  # frame per second
 data = []  # the database of pitch combination
 live_pitch = []  # the pitch which is on
+pre_pitch = []
+now_pitch = []
 
 
 # p = 0  # the pointer of l_list
@@ -56,7 +57,7 @@ def match_pitch_combination(pc):
 
 
 # main entry
-def make_data(l_list, frame):
+def make_data(fps,l_list, frame):
     point_start = 0
     now = 0
     step = 600 / fps
@@ -74,6 +75,36 @@ def make_data(l_list, frame):
         sign_list.append(pid)
         now += step
     return sign_list
+
+
+# find out if the pitch is in list
+def find_pitch(pitch_list, pitch):
+    for x in range(len(pitch_list)):
+        if pitch_list[x] == pitch:
+            return x
+    return -1
+
+
+# find out which pitch need to be on and which need to be off
+def find_on_and_off(label):
+    on = []
+    off = []
+    for i in range(len(now_pitch)):
+        now_pitch.pop()
+    for x in data[label]:
+        now_pitch.append(x)
+        if find_pitch(pre_pitch, x) == -1:
+            on.append(x)
+    for y in pre_pitch:
+        if find_pitch(now_pitch, y) == -1:
+            off.append(y)
+    return [on, off]
+
+
+# clear the pre_pitch when the generate is over
+def clear_pre():
+    for i in range(len(pre_pitch)):
+        pre_pitch.pop()
 
 
 def export_database(txt_name):
