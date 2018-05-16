@@ -22,7 +22,7 @@ dirs = os.listdir(DATASET_ROOT)
 for dir in dirs:
 	for file in os.listdir(DATASET_ROOT+'/'+dir):
 		# 如果不是.mp4和.mpg后缀，忽略
-		if not (file.endswith('mp4') or file.encode('mpg')):
+		if not (file.endswith('mp4') or file.endswith('mpg')):
 			print('ignore ',file)
 		else:
 			# 提取帧
