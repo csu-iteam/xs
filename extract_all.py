@@ -4,10 +4,10 @@ import datetime
 # 所有视频按每秒14帧提取
 # 所有数据放在DATASET_ROOT下，每一类放在一个文件夹
 # 提取的帧放在OUTPUT_ROOT/frames下，每一类在一个文件夹，每一个视频提取的帧在以视频命令的文件夹下
-DATASET_ROOT='/root/data/google_driver/xs/'
+DATASET_ROOT='/root/data/google_driver/video'
 OUTPUT_ROOT='/root/data/google_driver/'
 # 提取帧的命令
-def get_cmd(file, frames = 14):
+def get_cmd(file, frames = 12):
 	# 获取最短的文件名
 	basename = os.path.basename(file)
 	output_path = OUTPUT_ROOT+'frames/'+file
@@ -21,8 +21,8 @@ starttime = datetime.datetime.now()
 dirs = os.listdir(DATASET_ROOT)
 for dir in dirs:
 	for file in os.listdir(DATASET_ROOT+'/'+dir):
-		# 如果不是.mp4后缀，忽略
-		if not file.endswith('mp4'):
+		# 如果不是.mp4和.mpg后缀，忽略
+		if not (file.endswith('mp4') or file.encode('mpg')):
 			print('ignore ',file)
 		else:
 			# 提取帧

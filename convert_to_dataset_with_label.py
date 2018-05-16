@@ -72,7 +72,7 @@ for dir1 in os.listdir(POSE_ROOT):
             if info is None:
                 if last_info is None:
                     # raise Exception("Pose Info Error")
-                    info = [0 for x in range(22)]
+                    info = [0 for x in range(54)]
                 info = last_info
             last_info = info
             # 将节点信息存储下来
