@@ -32,7 +32,7 @@ def pitch_merge():
     for x in live_pitch:
         flag = False
         for y in unit:
-            if x == y:
+            if x[0] == y:
                 flag = True
         if not flag:
             unit.append(x[0])
