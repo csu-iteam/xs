@@ -125,40 +125,40 @@ def main():
     trainer = training.Trainer(updater, (args.epoch, 'epoch'), out=args.out)
 
     # Evaluate the model with the test dataset for each epoch
-    # trainer.extend(extensions.Evaluator(test_iter, model, device=args.gpu))
+    trainer.extend(extensions.Evaluator(test_iter, model, device=args.gpu))
 
     # Dump a computational graph from 'loss' variable at the first iteration
     # The "main" refers to the target link of the "main" optimizer.
-    # trainer.extend(extensions.dump_graph('main/loss'))
+    trainer.extend(extensions.dump_graph('main/loss'))
 
     # Take a snapshot for each specified epoch
-    # frequency = args.epoch if args.frequency == -1 else max(1, args.frequency)
-    # trainer.extend(extensions.snapshot(), trigger=(frequency, 'epoch'))
+    frequency = args.epoch if args.frequency == -1 else max(1, args.frequency)
+    trainer.extend(extensions.snapshot(), trigger=(frequency, 'epoch'))
 
     # Write a log of evaluation statistics for each epoch
-    # trainer.extend(extensions.LogReport())
+    trainer.extend(extensions.LogReport())
 
     # Save two plot images to the result dir
-    # if args.plot and extensions.PlotReport.available():
-    #     trainer.extend(
-    #         extensions.PlotReport(['main/loss', 'validation/main/loss'],
-    #                               'epoch', file_name='loss.png'))
-    #     trainer.extend(
-    #         extensions.PlotReport(
-    #             ['main/accuracy', 'validation/main/accuracy'],
-    #             'epoch', file_name='accuracy.png'))
+    if args.plot and extensions.PlotReport.available():
+        trainer.extend(
+            extensions.PlotReport(['main/loss', 'validation/main/loss'],
+                                  'epoch', file_name='loss.png'))
+        trainer.extend(
+            extensions.PlotReport(
+                ['main/accuracy', 'validation/main/accuracy'],
+                'epoch', file_name='accuracy.png'))
 
     # Print selected entries of the log to stdout
     # Here "main" refers to the target link of the "main" optimizer again, and
     # "validation" refers to the default name of the Evaluator extension.
     # Entries other than 'epoch' are reported by the Classifier link, called by
     # either the updater or the evaluator.
-    # trainer.extend(extensions.PrintReport(
-    #     ['epoch', 'main/loss', 'validation/main/loss',
-    #      'main/accuracy', 'validation/main/accuracy', 'elapsed_time']))
+    trainer.extend(extensions.PrintReport(
+        ['epoch', 'main/loss', 'validation/main/loss',
+         'main/accuracy', 'validation/main/accuracy', 'elapsed_time']))
 
     # Print a progress bar to stdout
-    # trainer.extend(extensions.ProgressBar())
+    trainer.extend(extensions.ProgressBar())
 
     if args.resume:
         # Resume from a snapshot
