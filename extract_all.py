@@ -4,7 +4,7 @@ import datetime
 # 所有视频按每秒14帧提取
 # 所有数据放在DATASET_ROOT下，每一类放在一个文件夹
 # 提取的帧放在OUTPUT_ROOT/frames下，每一类在一个文件夹，每一个视频提取的帧在以视频命令的文件夹下
-DATASET_ROOT='/root/data/google_driver/video'
+DATASET_ROOT='/root/data/google_driver/video/'
 OUTPUT_ROOT='/root/data/google_driver/'
 # 提取帧的命令
 def get_cmd(file, frames = 12):
