@@ -105,7 +105,8 @@ def main():
     train = handle_data(train)
     test = handle_data(test)
     n_rhythm = len(target_midi_ids)
-    model = Classifier(XSNet(args.layer, 54, n_rhythm, args.unit))
+    # model = Classifier(XSNet(args.layer, 54, n_rhythm, args.unit))
+    model = XSNet(args.layer, 54, n_rhythm, args.unit)
     if args.gpu >= 0:
         # Make a specified GPU current
         chainer.backends.cuda.get_device_from_id(args.gpu).use()
