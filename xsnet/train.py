@@ -96,10 +96,11 @@ def main():
     # Set up a neural network to train
     # Classifier reports softmax cross entropy loss and accuracy at every
     # iteration, which will be used by the PrintReport extension below.
-    # 统计音乐片段
+    # handle mide snippets
     target_midi_ids = load_midi_snippet(args.target_midi)
     target_midi_ids = {i:w for w, i in target_midi_ids.items()}
-    # 训练集打的标签，下标是从0开始的，在这里，我把0做为空,所以所有的标签需要+1
+    # The label of the training set, the subscript starts from 0.
+    # Here, I leave 0 as empty, so all the labels need to be +1
     train = handle_data(train)
     test = handle_data(test)
     n_rhythm = len(target_midi_ids)
