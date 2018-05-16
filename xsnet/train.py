@@ -149,23 +149,23 @@ def main():
     # trainer.extend(extensions.LogReport())
 
     # Save two plot images to the result dir
-    # if args.plot and extensions.PlotReport.available():
-    #     trainer.extend(
-    #         extensions.PlotReport(['main/loss', 'validation/main/loss'],
-    #                               'epoch', file_name='loss.png'))
-    #     trainer.extend(
-    #         extensions.PlotReport(
-    #             ['main/accuracy', 'validation/main/accuracy'],
-    #             'epoch', file_name='accuracy.png'))
+    if args.plot and extensions.PlotReport.available():
+        trainer.extend(
+            extensions.PlotReport(['main/loss', 'validation/main/loss'],
+                                  'epoch', file_name='loss.png'))
+        trainer.extend(
+            extensions.PlotReport(
+                ['main/accuracy', 'validation/main/accuracy'],
+                'epoch', file_name='accuracy.png'))
 
     # Print selected entries of the log to stdout
     # Here "main" refers to the target link of the "main" optimizer again, and
     # "validation" refers to the default name of the Evaluator extension.
     # Entries other than 'epoch' are reported by the Classifier link, called by
     # either the updater or the evaluator.
-    # trainer.extend(extensions.PrintReport(
-    #     ['epoch', 'main/loss', 'validation/main/loss',
-    #      'main/accuracy', 'validation/main/accuracy', 'elapsed_time']))
+    trainer.extend(extensions.PrintReport(
+        ['epoch', 'main/loss', 'validation/main/loss',
+         'main/accuracy', 'validation/main/accuracy', 'elapsed_time']))
 
     # Print a progress bar to stdout
     trainer.extend(extensions.ProgressBar())
