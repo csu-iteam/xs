@@ -33,7 +33,6 @@ from chainer import reporter
 def sequence_embed(embed, xs):
     x_len = [len(x) for x in xs]
     x_section = np.cumsum(x_len[:-1])
-    print(xs)
     ex = embed(F.concat(xs, axis=0))
     exs = F.split_axis(ex, x_section, 0)
     return exs
@@ -43,7 +42,7 @@ class XSNet(Chain):
     def __init__(self, n_layers, n_source_pose_node, n_target_rhythm, n_units):
         super(XSNet, self).__init__()
         with self.init_scope():
-            self.embed_x = L.EmbedID(n_source_pose_node, n_units)
+            self.embed_x = L.Linear(n_source_pose_node, n_units)
             self.embed_y = L.EmbedID(n_target_rhythm, n_units)
             self.encoder = L.NStepLSTM(n_layers, n_units, n_units, 0.1)
             self.decoder = L.NStepLSTM(n_layers, n_units, n_units, 0.1)
@@ -53,14 +52,20 @@ class XSNet(Chain):
         self.n_units = n_units
 
     def __call__(self, xs, ys):
-        xs = [x[::-1] for x in xs]
-        exs = sequence_embed(self.embed_x,xs)
         eys = sequence_embed(self.embed_y,ys)
+        xs = [x[::-1] for x in xs]
+        # xs = np.array(xs)
+        # exs = self.embed_x(xs)
+        # exs = [self.embed_x(it) for it in xs]
+        exs = []
+        for it in xs:
+            t = self.embed_x(it)
+            exs.append(t)
         hx, cx, _ = self.encoder(None, None, exs)
         _, _, os = self.decoder(hx, cx, eys)
         batch = len(xs)
         concat_os = F.concat(os,axis=0)
-        concat_ys_out = F.concat(ys_out, axis=0)
+        concat_ys_out = F.concat(ys, axis=0)
         loss = F.sum(F.softmax_cross_entropy(self.W(concat_os),concat_ys_out,reduce='no'))/batch
         chainer.report({'loss':loss.data}, self)
 

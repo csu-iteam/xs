@@ -27,8 +27,11 @@ def get_tuple(data):
     t_data = []
     t_label = []
     for it in data:
-        t_data.append(np.array(it[0]))
-        t_label.append(np.array(it[1]))
+        if len(it[0]) == 0:
+            it[0].append([0 for i in range(54)])
+            it[1].append(0)
+        t_data.append(np.array(it[0]).astype(np.float32))
+        t_label.append(np.array(it[1]).astype(np.int32))
     t_data = np.array(t_data)
     t_label = np.array(t_label)
     print("t_data:",t_data.shape)

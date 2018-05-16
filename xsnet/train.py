@@ -29,8 +29,17 @@ from model import XSNet, Classifier
 import datasets
 from chainer.dataset import concat_examples
 from chainer.backends.cuda import to_cpu
+def load_midi_snippet(path):
+    with open(path) as f:
+        midi_snippets = {line.strip(): i + 1 for i,line in enumerate(f)}
+        midi_snippets['0'] = 0
+    return midi_snippets
+def handle_data(data):
+    for i in range(len(data)):
+        for j in range(len(data[i][1])):
+            data[i][1][j] = data[i][1][j] + 1
 
-
+    return data
 def convert(batch, device):
     def to_device_batch(batch):
         if device is None:
@@ -51,7 +60,7 @@ def convert(batch, device):
 
 def main():
     parser = argparse.ArgumentParser(description='Chainer example: MNIST')
-    parser.add_argument('--batchsize', '-b', type=int, default=100,
+    parser.add_argument('--batchsize', '-b', type=int, default=64,
                         help='Number of images in each mini-batch')
     parser.add_argument('--epoch', '-e', type=int, default=20,
                         help='Number of sweeps over the dataset to train')
@@ -63,12 +72,14 @@ def main():
                         help='Directory to output the result')
     parser.add_argument('--resume', '-r', default='',
                         help='Resume the training from snapshot')
-    parser.add_argument('--unit', '-u', type=int, default=1000,
+    parser.add_argument('--unit', '-u', type=int, default=1024,
                         help='Number of units')
     parser.add_argument('--layer', '-l', type=int, default=3,
                         help='number of layers')
     parser.add_argument('--noplot', dest='plot', action='store_false',
                         help='Disable PlotReport extension')
+    parser.add_argument('--target_midi','-t', default='../midi/database.txt',
+                        help='target midi snippet')
     args = parser.parse_args()
 
     print('GPU: {}'.format(args.gpu))
@@ -77,10 +88,21 @@ def main():
     print('# epoch: {}'.format(args.epoch))
     print('')
 
+
+    # Load the MNIST dataset
+    train, test = datasets.get_data()
+    print('train', len(train))
+    # exit(0)
     # Set up a neural network to train
     # Classifier reports softmax cross entropy loss and accuracy at every
     # iteration, which will be used by the PrintReport extension below.
-    n_rhythm = 1000
+    # 统计音乐片段
+    target_midi_ids = load_midi_snippet(args.target_midi)
+    target_midi_ids = {i:w for w, i in target_midi_ids.items()}
+    # 训练集打的标签，下标是从0开始的，在这里，我把0做为空,所以所有的标签需要+1
+    train = handle_data(train)
+    test = handle_data(test)
+    n_rhythm = len(target_midi_ids)
     model = Classifier(XSNet(args.layer, 54, n_rhythm, args.unit))
     if args.gpu >= 0:
         # Make a specified GPU current
@@ -90,11 +112,6 @@ def main():
     # Setup an optimizer
     optimizer = chainer.optimizers.Adam()
     optimizer.setup(model)
-
-    # Load the MNIST dataset
-    train, test = datasets.get_data()
-    print('train', len(train))
-    # exit(0)
 
     train_iter = chainer.iterators.SerialIterator(train, args.batchsize)
     test_iter = chainer.iterators.SerialIterator(test, args.batchsize,
