@@ -168,7 +168,7 @@ def main():
 
 def my_concat(batch, device=None, padding=None):
     """
-    将数据和标签分离
+    Separate data and labels
     :param batch:
     :param device:
     :param padding:
