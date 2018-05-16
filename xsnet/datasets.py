@@ -41,7 +41,7 @@ def get_tuple(data):
 
 
 def get_data():
-    DATASET_PATH = '/home/pikachu/Documents/pose.npz'
+    DATASET_PATH = 'pose.npz'
     train = []
     test = []
     data = np.load(DATASET_PATH)
