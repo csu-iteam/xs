@@ -26,11 +26,22 @@ UPLOAD_FOLDER = '/home/pikachu/Desktop/'
 ALLOWED_EXTENSIONS = set(['mp4'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+app.config['SECRET_KEY'] = os.urandom(24)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def generate_music(path):
+    # 如果不是视频，抛出异常file type error
 
+    pass
+def extract_frame(video_path,output_path):
+    # 提取帧
+    pass
+
+def extract_pose(frame_dir, output_path):
+    # 提取节点信息
+    pass
 @app.route('/upload_file', methods=['GET'])
 def upload_index():
     return """
