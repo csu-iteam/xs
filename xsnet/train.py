@@ -139,11 +139,11 @@ def main():
 
     # Dump a computational graph from 'loss' variable at the first iteration
     # The "main" refers to the target link of the "main" optimizer.
-    # trainer.extend(extensions.dump_graph('main/loss'))
+    trainer.extend(extensions.dump_graph('main/loss'))
 
     # Take a snapshot for each specified epoch
     # frequency = args.epoch if args.frequency == -1 else max(1, args.frequency)
-    # trainer.extend(extensions.snapshot(), trigger=(frequency, 'epoch'))
+    trainer.extend(extensions.snapshot(), trigger=(frequency, 'epoch'))
 
     # Write a log of evaluation statistics for each epoch
     # trainer.extend(extensions.LogReport())
