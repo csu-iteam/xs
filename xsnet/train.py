@@ -61,11 +61,11 @@ def convert(batch, device):
 
 def main():
     parser = argparse.ArgumentParser(description='Chainer example: MNIST')
-    parser.add_argument('--batchsize', '-b', type=int, default=2,
+    parser.add_argument('--batchsize', '-b', type=int, default=32,
                         help='Number of images in each mini-batch')
-    parser.add_argument('--epoch', '-e', type=int, default=20,
+    parser.add_argument('--epoch', '-e', type=int, default=2000,
                         help='Number of sweeps over the dataset to train')
-    parser.add_argument('--frequency', '-f', type=int, default=-1,
+    parser.add_argument('--frequency', '-f', type=int, default=100,
                         help='Frequency of taking a snapshot')
     parser.add_argument('--gpu', '-g', type=int, default=-1,
                         help='GPU ID (negative value indicates CPU)')
@@ -89,6 +89,8 @@ def main():
     print('# unit: {}'.format(args.unit))
     print('# Minibatch-size: {}'.format(args.batchsize))
     print('# epoch: {}'.format(args.epoch))
+    print('# frequency: {}'.format(args.frequency))
+    print('# layer: {}'.format(args.layer))
     print('')
 
 
