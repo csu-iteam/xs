@@ -30,7 +30,7 @@ def get_pose_info(path):
     if people is None:
         raise Exception("data:" + data + " has not people info")
     if len(people) == 0:
-        print("people has not pose info")
+        print("people has not pose info",path)
         return None
     else:
         return people[0]["pose_keypoints_2d"]
