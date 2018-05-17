@@ -39,7 +39,11 @@ def get_type_num(dir):
     data={
         'BboomBboom':0,
         'Confession_Balloon':2,
-        'seve':5
+        'seve':5,
+        'goodtime':6,
+        'jilejingtu':5,
+        'panama':1,
+        'shapeofyou':3
     }
     return data[dir]
 
