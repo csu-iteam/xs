@@ -20,19 +20,24 @@ and each video extracted frame is under the video-named folder
 """
 import os, sys
 import datetime
-DATASET_ROOT='/root/data/google_driver/frames/'
-OUTPUT_ROOT='/root/data/google_driver/'
-OPENPOSE_ROOT='/root/data/openpose/'
+
+DATASET_ROOT = '/root/data/google_driver/frames/'
+OUTPUT_ROOT = '/root/data/google_driver/'
+OPENPOSE_ROOT = '/root/data/openpose/'
+
+
 # Get extract pose commands
 def get_cmd(dir):
-	#  ./build/examples/openpose/openpose.bin --image_dir /home/pikachu/Desktop/test --write_json /home/pikachu/Desktop/test --net_resolution 192x144 --display 0
-	bin_path = OPENPOSE_ROOT+'/build/examples/openpose/openpose.bin'
-	image_dir = DATASET_ROOT + dir
-	write_json_path = OUTPUT_ROOT+'json/'+dir
-	if not os.path.exists(write_json_path):
-		os.makedirs(write_json_path)
-	cmd=bin_path+' --image_dir '+image_dir+' --write_json '+write_json_path+' --display 0 --keypoint_scale 3 > /dev/null'
-	return cmd
+    #  ./build/examples/openpose/openpose.bin --image_dir /home/pikachu/Desktop/test --write_json /home/pikachu/Desktop/test --net_resolution 192x144 --display 0
+    bin_path = OPENPOSE_ROOT + '/build/examples/openpose/openpose.bin'
+    image_dir = DATASET_ROOT + dir
+    write_json_path = OUTPUT_ROOT + 'json/' + dir
+    if not os.path.exists(write_json_path):
+        os.makedirs(write_json_path)
+    cmd = bin_path + ' --image_dir ' + image_dir + ' --write_json ' + write_json_path + ' --display 0 --keypoint_scale 3 > /dev/null'
+    return cmd
+
+
 starttime = datetime.datetime.now()
 os.chdir(OPENPOSE_ROOT)
 # Traverse DATASET_ROOT
@@ -40,13 +45,12 @@ os.chdir(OPENPOSE_ROOT)
 # One layer is big, one layer is concrete
 dirs = os.listdir(DATASET_ROOT)
 for dir1 in dirs:
-	for dir2 in os.listdir(DATASET_ROOT+'/'+dir1):
-		# The video frame directory
-		dir = dir1+'/'+dir2
-		cmd = get_cmd(dir)
-		print(cmd)
-		os.system(cmd)
-
+    for dir2 in os.listdir(DATASET_ROOT + '/' + dir1):
+        # The video frame directory
+        dir = dir1 + '/' + dir2
+        cmd = get_cmd(dir)
+        print(cmd)
+        os.system(cmd)
 
 endtime = datetime.datetime.now()
-print('times: ',(endtime-starttime).seconds,' seconds')
+print('times: ', (endtime - starttime).seconds, ' seconds')

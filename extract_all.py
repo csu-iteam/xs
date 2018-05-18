@@ -21,31 +21,36 @@ Each video frame is extracted under the video command folder.
 """
 import os, sys
 import datetime
-DATASET_ROOT='/root/data/google_driver/video/'
-OUTPUT_ROOT='/root/data/google_driver/'
+
+DATASET_ROOT = '/root/data/google_driver/video/'
+OUTPUT_ROOT = '/root/data/google_driver/'
+
+
 # Get extract frame commands
-def get_cmd(file, frames = 12):
-	# 获取最短的文件名
-	basename = os.path.basename(file)
-	output_path = OUTPUT_ROOT+'frames/'+file
-	input_path = DATASET_ROOT+file
-	if not os.path.exists(output_path):
-		os.makedirs(output_path)
-	cmd='ffmpeg -i '+input_path+' -r '+str(frames)+' '+output_path+'/'+basename+'.%4d.jpg > /dev/null'
-	return cmd
+def get_cmd(file, frames=12):
+    # 获取最短的文件名
+    basename = os.path.basename(file)
+    output_path = OUTPUT_ROOT + 'frames/' + file
+    input_path = DATASET_ROOT + file
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+    cmd = 'ffmpeg -i ' + input_path + ' -r ' + str(frames) + ' ' + output_path + '/' + basename + '.%4d.jpg > /dev/null'
+    return cmd
+
+
 starttime = datetime.datetime.now()
 # Traverse DATASET_ROOT
 dirs = os.listdir(DATASET_ROOT)
 for dir in dirs:
-	for file in os.listdir(DATASET_ROOT+'/'+dir):
-		# If it is not a .mp4 and .mpg suffix, ignore
-		if not (file.endswith('mp4') or file.endswith('mpg')):
-			print('ignore ',file)
-		else:
-			# extract frame
-			cmd = get_cmd(dir+'/'+file)
-			print(cmd)
-			os.system(cmd)
+    for file in os.listdir(DATASET_ROOT + '/' + dir):
+        # If it is not a .mp4 and .mpg suffix, ignore
+        if not (file.endswith('mp4') or file.endswith('mpg')):
+            print('ignore ', file)
+        else:
+            # extract frame
+            cmd = get_cmd(dir + '/' + file)
+            print(cmd)
+            os.system(cmd)
 
 endtime = datetime.datetime.now()
-print((endtime-starttime).seconds)
+print((endtime - starttime).seconds)

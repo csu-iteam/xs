@@ -28,6 +28,7 @@ import json
 import numpy as np
 import datetime
 from midi import DriveMidiConversion
+
 POSE_ROOT = '/root/data/google_driver/json/'
 starttime = datetime.datetime.now()
 if not os.path.exists(POSE_ROOT):
@@ -47,22 +48,24 @@ def get_pose_info(path):
     if people is None:
         raise Exception("data:" + data + " has not people info")
     if len(people) == 0:
-        print("people has not pose info",path)
+        print("people has not pose info", path)
         return None
     else:
         return people[0]["pose_keypoints_2d"]
 
+
 def get_type_num(dir):
-    data={
-        'BboomBboom':0,
-        'Confession_Balloon':2,
-        'seve':5,
-        'goodtime':6,
-        'jilejingtu':5,
-        'panama':1,
-        'shapeofyou':3
+    data = {
+        'BboomBboom': 0,
+        'Confession_Balloon': 2,
+        'seve': 5,
+        'goodtime': 6,
+        'jilejingtu': 5,
+        'panama': 1,
+        'shapeofyou': 3
     }
     return data[dir]
+
 
 pose_infos = []
 for dir1 in os.listdir(POSE_ROOT):
@@ -101,9 +104,9 @@ for dir1 in os.listdir(POSE_ROOT):
         # Add label information here
         num = get_type_num(dir1)
         if num is None:
-            raise Exception('Unsuport type ',dir1)
-        labels = DriveMidiConversion.extract(num,len(infos))
-        type_level_infos.append((infos,labels))
+            raise Exception('Unsuport type ', dir1)
+        labels = DriveMidiConversion.extract(num, len(infos))
+        type_level_infos.append((infos, labels))
     pose_infos.append(type_level_infos)
 # Finally, convert to npz
 data = np.array(pose_infos)
