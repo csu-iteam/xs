@@ -28,7 +28,7 @@ def find_value(temp_x):
 # using 1/600 second will be convenience for matching fps
 def exchange_time(position, dis, tempo):
     speed = 60000000 / tempo
-    time = 1.0 * position / dis * speed * 10
+    time = 1.0 * position / dis / speed * 36000
     return int(round(time))
 
 
@@ -47,6 +47,14 @@ def divide_vol(vol):
     return divided_vol
 
 
+def search_tempo(position, tempo_list):
+    for x in tempo_list:
+        if x[0] > position:
+            return temp[1]
+        temp = x
+    return tempo_list[len(tempo_list)-1][1]
+
+
 def channel_merge(l_list):
     l_list = sorted(l_list, key=lambda unit: unit[1])
     return l_list
@@ -63,10 +71,9 @@ def analysis(midi_txt_name):
     l_point = 0
     # nList is used for saving which pitch has not end;
     n_list = [0] * 10000
-
+    tempo_list = []
     for line in midi_file:
         temp = line.split()
-
         if temp[0] == MFile:
             dis = int(temp[3])
 
@@ -79,7 +86,8 @@ def analysis(midi_txt_name):
         elif temp[0] == "0":
             if temp[1] == Tempo:
                 # do tempo
-                tempo = int(temp[2])
+                # tempo = int(temp[2])
+                tempo_list.append([0, int(temp[2])])
             elif temp[1] == KeySig:
                 # do KeySig
                 continue
@@ -98,6 +106,7 @@ def analysis(midi_txt_name):
                 unit = [0 for i in range(5)]
                 n = find_value(temp[3])
                 unit[0] = n
+                tempo = search_tempo(int(temp[0]), tempo_list)
                 unit[1] = exchange_time(int(temp[0]), dis, tempo)
                 n_list[n] = int(temp[0])
                 v = find_value(temp[4])
@@ -115,6 +124,7 @@ def analysis(midi_txt_name):
                 unit = [0 for i in range(5)]
                 n = find_value(temp[3])
                 unit[0] = n
+                tempo = search_tempo(int(temp[0]), tempo_list)
                 unit[1] = exchange_time(int(temp[0]), dis, tempo)
                 n_list[n] = l_point
                 v = find_value(temp[4])
@@ -126,10 +136,12 @@ def analysis(midi_txt_name):
                 end_time = int(temp[0])
                 v = find_value(temp[4])
                 li = n_list[n]
+                tempo = search_tempo(int(temp[0]), tempo_list)
                 l_list[li][2] = exchange_time(int(end_time), dis, tempo)
                 l_list[li][4] = divide_vol(v)
             elif temp[1] == Tempo:
-                tempo = int(temp[2])
+                # tempo = int(temp[2])
+                tempo_list.append([int(temp[0]), int(temp[2])])
             elif temp[1] == Par:
                 continue
             elif temp[1] == TimeSig:
