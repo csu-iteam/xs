@@ -110,7 +110,7 @@ class Classifier(Chain):
             self.accuracy = self.accfun(self.y, t)
             reporter.report({'accuracy': self.accuracy}, self)
         return self.loss
-        # 子晋的代码
+        # Code from zijin
         # x = self.predictor(x, t)
         # label = np.transpose(t)[0]
         # cross_entropy = F.mean(F.softmax_cross_entropy(x, label))

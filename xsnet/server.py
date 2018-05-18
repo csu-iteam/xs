@@ -65,7 +65,7 @@ def make_data(path):
 
 
 def generate_music(path):
-    # 如果不是视频，抛出异常file type error
+    # If it is not a video, throw an exception file type error
     if os.path.exists(path):
         raise Exception('file not exist')
     if path.endswith('.mp4'):

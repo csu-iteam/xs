@@ -1,12 +1,29 @@
-# -*- coding: utf-8 -*-
+# -*- coding: UTF-8 -*-
+# Copyright 2018 PikachuHy. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+"""
+All data is placed under DATASET_ROOT and each category is placed in a folder
+Extracted frames are placed under OUTPUT_ROOT/pose, each category is in a folder,
+and each video extracted frame is under the video-named folder
+"""
 import os, sys
 import datetime
-# 所有数据放在DATASET_ROOT下，每一类放在一个文件夹
-# 提取的帧放在OUTPUT_ROOT/pose下，每一类在一个文件夹，每一个视频提取的帧在以视频命令的文件夹下
 DATASET_ROOT='/root/data/google_driver/frames/'
 OUTPUT_ROOT='/root/data/google_driver/'
 OPENPOSE_ROOT='/root/data/openpose/'
-# 提取帧的命令
+# Get extract pose commands
 def get_cmd(dir):
 	#  ./build/examples/openpose/openpose.bin --image_dir /home/pikachu/Desktop/test --write_json /home/pikachu/Desktop/test --net_resolution 192x144 --display 0
 	bin_path = OPENPOSE_ROOT+'/build/examples/openpose/openpose.bin'
@@ -18,13 +35,13 @@ def get_cmd(dir):
 	return cmd
 starttime = datetime.datetime.now()
 os.chdir(OPENPOSE_ROOT)
-# 遍历DATASET_ROOT
-# 实际上，根据我的目录结构，其实只需要跟进两层
-# 一层是大类，一层是具体的
+# Traverse DATASET_ROOT
+# Actually, according to my directory structure, only two layers need to follow.
+# One layer is big, one layer is concrete
 dirs = os.listdir(DATASET_ROOT)
 for dir1 in dirs:
 	for dir2 in os.listdir(DATASET_ROOT+'/'+dir1):
-		# 视频帧所在目录
+		# The video frame directory
 		dir = dir1+'/'+dir2
 		cmd = get_cmd(dir)
 		print(cmd)
