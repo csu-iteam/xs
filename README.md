@@ -55,3 +55,107 @@ midi目录下主要文件用途说明
 | midiSrc | 用于存储midi音乐文件 |
 | midiTxt | 用于存储midi文本文件 |
 
+## 训练
+
+### 前置要求
+
+需要安装OpenPose和ffmpeg。深度学习框架Chainer。
+
+可以去GitHub下载，编译安装。
+
+[OpenPose GitHub](https://github.com/CMU-Perceptual-Computing-Lab/openpose)
+
+[ffmpeg GitHub](https://github.com/FFmpeg/FFmpeg)
+
+[chainer GitHub](https://github.com/PikachuHy/chainer.git) 我自己的地址
+
+### 数据准备
+
+本网络采用xs-7作为数据集，在开始训练前需要下载数据集。我将数据集存放在google driver上，因为第三协议，暂不能公开数据集。等过了有效期，再说。
+
+数据集下载完毕后，需要使用主目录下的脚本进行帧提取，节点信息提取。
+
+```shell
+python extract_all.py
+python extract_pose.py
+```
+
+最后将数据变为xsnet需要的形式
+
+如果需要带标签
+
+```
+python convert_to_dataset_with_label.py
+```
+
+不带标签
+
+```
+python convert_to_dataset.py
+```
+
+### 开始训练
+
+```
+cd xsnet 
+python train.py
+```
+
+在Tesla P100环境下，训练大概12个小时，可以得到一个比较好的模型。
+
+### 测试
+
+启动服务器
+
+```
+bash run_server.sh
+```
+
+然后上传视频文件即可。
+
+## 相关论文
+
+我们实现主要的论文依据
+
+### seq2seq方面
+
+Cho K, Van Merriënboer B, Gulcehre C, et al. Learning phrase representations using RNN encoder-decoder for statistical machine translation[J]. arXiv preprint arXiv:1406.1078, 2014.
+
+Sutskever I, Vinyals O, Le Q V. Sequence to sequence learning with neural networks[C]//Advances in neural information processing systems. 2014: 3104-3112.
+
+Bahdanau D, Cho K, Bengio Y. Neural machine translation by jointly learning to align and translate[J]. arXiv preprint arXiv:1409.0473, 2014.
+
+Jean S, Cho K, Memisevic R, et al. On using very large target vocabulary for neural machine translation[J]. arXiv preprint arXiv:1412.2007, 2014.
+
+\2015. A Neural Conversational Model[J]. Computer Science
+
+Vinyals O, Bengio S, Kudlur M. Order matters: Sequence to sequence for sets[J]. arXiv preprint arXiv:1511.06391, 2015.
+
+### OpenPose方面
+
+Cao Z, Simon T, Wei S E, et al. Realtime multi-person 2d pose estimation using part affinity fields[C]//CVPR. 2017, 1(2): 7.
+Wei S E, Ramakrishna V, Kanade T, et al. Convolutional pose machines[C]//Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition. 2016: 4724-4732.
+
+Simon T, Joo H, Matthews I, et al. Hand keypoint detection in single images using multiview bootstrapping[C]//The IEEE Conference on Computer Vision and Pattern Recognition (CVPR). 2017, 2.
+
+=============================================================
+
+### 网络底层的论文依据
+
+LeCun Y, Boser B, Denker J S, et al. Backpropagation applied to handwritten zip code recognition[J]. Neural computation, 1989, 1(4): 541-551.
+LeCun Y, Bottou L, Bengio Y, et al. Gradient-based learning applied to document recognition[J]. Proceedings of the IEEE, 1998, 86(11): 2278-2324.
+
+Hochreiter S, Schmidhuber J. Long short-term memory[J]. Neural computation, 1997, 9(8): 1735-1780.
+
+
+
+## 相关仓库
+
+[Chainer_Realtime_Multi-Person_Pose_Estimation](https://github.com/PikachuHy/Chainer_Realtime_Multi-Person_Pose_Estimation)
+[OpenPose](https://github.com/CMU-Perceptual-Computing-Lab/openpose)
+
+seq2seq
+
+## 相关开发人员
+
+根据规定，暂不公开，等过了有效期。
