@@ -69,6 +69,7 @@ def make_midi(midi_name, label_list):
 
 
 if __name__ == '__main__':
-    for x in range(6):
-        extract(x, 3000)
+    extract(5, 3000)
+    # for x in range(6):
+    #     extract(x, 3000)
     exit(0)
