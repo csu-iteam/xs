@@ -30,17 +30,23 @@ from model import XSNet, Classifier
 import datasets
 from chainer.dataset import concat_examples
 from chainer.backends.cuda import to_cpu
+
+
 def load_midi_snippet(path):
     with open(path) as f:
-        midi_snippets = {line.strip(): i + 1 for i,line in enumerate(f)}
+        midi_snippets = {line.strip(): i + 1 for i, line in enumerate(f)}
         midi_snippets['0'] = 0
     return midi_snippets
+
+
 def handle_data(data):
     for i in range(len(data)):
         for j in range(len(data[i][1])):
             data[i][1][j] = data[i][1][j] + 1
 
     return data
+
+
 def convert(batch, device):
     def to_device_batch(batch):
         if device is None:
@@ -51,13 +57,14 @@ def convert(batch, device):
             xp = cuda.cupy.get_array_module(*batch)
             concat = xp.concatenate(batch, axis=0)
             sections = np.cumsum([len(x)
-                                     for x in batch[:-1]], dtype=np.int32)
+                                  for x in batch[:-1]], dtype=np.int32)
             concat_dev = chainer.dataset.to_device(device, concat)
             batch_dev = cuda.cupy.split(concat_dev, sections)
             return batch_dev
 
     return {'xs': to_device_batch([x for x, _ in batch]),
             'ys': to_device_batch([y for _, y in batch])}
+
 
 def main():
     parser = argparse.ArgumentParser(description='Chainer example: MNIST')
@@ -79,7 +86,7 @@ def main():
                         help='number of layers')
     parser.add_argument('--noplot', dest='plot', action='store_false',
                         help='Disable PlotReport extension')
-    parser.add_argument('--target_midi','-t', default='../midi/database.txt',
+    parser.add_argument('--target_midi', '-t', default='../midi/database.txt',
                         help='target midi snippet')
     parser.add_argument('--log-interval', type=int, default=200,
                         help='number of iteration to show log')
@@ -93,7 +100,6 @@ def main():
     print('# layer: {}'.format(args.layer))
     print('')
 
-
     # Load the MNIST dataset
     train, test = datasets.get_data()
     print('train', len(train))
@@ -103,7 +109,7 @@ def main():
     # iteration, which will be used by the PrintReport extension below.
     # handle mide snippets
     target_midi_ids = load_midi_snippet(args.target_midi)
-    target_midi_ids = {i:w for w, i in target_midi_ids.items()}
+    target_midi_ids = {i: w for w, i in target_midi_ids.items()}
     # The label of the training set, the subscript starts from 0.
     # Here, I leave 0 as empty, so all the labels need to be +1
     train = handle_data(train)
