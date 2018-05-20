@@ -32,10 +32,10 @@ def exchange_time(position, dis, tempo):
     return int(round(time))
 
 
-# find the position of the pitch according to the steps and fps
+# find the position of the pitch according to the steps and fps.Set default speed as 60,dis as 480.
 def exchange_position(step_num, fps):
     time = step_num * 600 / fps
-    position = time * 480.0 / (60000000 / 625000) / 10
+    position = 1.0 * time / 36000 * 480 * 60
     return position
 
 
@@ -52,7 +52,7 @@ def search_tempo(position, tempo_list):
         if x[0] > position:
             return temp[1]
         temp = x
-    return tempo_list[len(tempo_list)-1][1]
+    return tempo_list[len(tempo_list) - 1][1]
 
 
 def channel_merge(l_list):
