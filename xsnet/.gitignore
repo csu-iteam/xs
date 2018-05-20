@@ -3,4 +3,5 @@ pose.npz.debug
 result/
 train.error
 train.log
-
+pose.npz.BboomBboom
+pose.npz.jilejingtu

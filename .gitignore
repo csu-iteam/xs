@@ -14,3 +14,5 @@ extract_pose.log
 midi/__pycache__/
 xsnet/__pycache__/
 *.pyc
+pose.npz.all
+

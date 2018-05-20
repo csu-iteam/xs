@@ -31,6 +31,7 @@ from chainer.functions.loss import softmax_cross_entropy
 from chainer.functions.evaluation import accuracy
 from chainer import reporter
 
+
 def sequence_embed(embed, xs):
     x_len = [len(x) for x in xs]
     x_section = np.cumsum(x_len[:-1])
@@ -53,7 +54,7 @@ class XSNet(Chain):
         self.n_units = n_units
 
     def __call__(self, xs, ys):
-        eys = sequence_embed(self.embed_y,ys)
+        eys = sequence_embed(self.embed_y, ys)
         xs = [x[::-1] for x in xs]
         # xs = np.array(xs)
         # exs = self.embed_x(xs)
@@ -65,15 +66,16 @@ class XSNet(Chain):
         hx, cx, _ = self.encoder(None, None, exs)
         _, _, os = self.decoder(hx, cx, eys)
         batch = len(xs)
-        concat_os = F.concat(os,axis=0)
+        concat_os = F.concat(os, axis=0)
         concat_ys_out = F.concat(ys, axis=0)
-        loss = F.sum(F.softmax_cross_entropy(self.W(concat_os),concat_ys_out,reduce='no'))/batch
-        chainer.report({'loss':loss.data}, self)
+        loss = F.sum(F.softmax_cross_entropy(self.W(concat_os), concat_ys_out, reduce='no')) / batch
+        chainer.report({'loss': loss.data}, self)
 
         n_words = concat_ys_out.shape[0]
         perp = self.xp.exp(loss.data * batch / n_words)
         chainer.report({'perp': perp}, self)
         return loss
+
 
 class Classifier(Chain):
     compute_accuracy = True
@@ -108,7 +110,7 @@ class Classifier(Chain):
             self.accuracy = self.accfun(self.y, t)
             reporter.report({'accuracy': self.accuracy}, self)
         return self.loss
-        # 子晋的代码
+        # Code from zijin
         # x = self.predictor(x, t)
         # label = np.transpose(t)[0]
         # cross_entropy = F.mean(F.softmax_cross_entropy(x, label))

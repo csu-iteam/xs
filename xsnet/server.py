@@ -19,6 +19,11 @@ Build a server and export interface to user
 import os
 from flask import Flask, render_template, request, flash, redirect, url_for, jsonify
 from werkzeug.utils import secure_filename
+import hashlib
+from model import XSNet
+from train import load_midi_snippet
+import../ convert_to_dataset_with_label  as mk_data
+import numpy as np
 
 app = Flask(__name__)
 
@@ -28,20 +33,83 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 app.config['SECRET_KEY'] = os.urandom(24)
 
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def generate_music(path):
-    # 如果不是视频，抛出异常file type error
 
-    pass
-def extract_frame(video_path,output_path):
-    # 提取帧
-    pass
+def init_model():
+    target_midi_ids = load_midi_snippet('../midi/database.txt')
+    target_midi_ids = {i: w for w, i in target_midi_ids.items()}
+    n_rhythm = len(target_midi_ids)
+    model = XSNet(3, 54, n_rhythm, 1024)
+    return model, target_midi_ids
+
+
+def make_data(path):
+    if not os.path.exists(path):
+        raise Exception(path, ' is not exist')
+    infos = []
+    for file in os.listdir(path):
+        info = mk_data.get_pose_info(file)
+
+        if info is None:
+            if last_info is None:
+                # raise Exception("Pose Info Error")
+                info = [0 for x in range(54)]
+            info = last_info
+        last_info = info
+        # 将节点信息存储下来
+        infos.append(info)
+    return np.array(infos)
+
+
+def generate_music(path):
+    # If it is not a video, throw an exception file type error
+    if os.path.exists(path):
+        raise Exception('file not exist')
+    if path.endswith('.mp4'):
+        raise Exception('file is invalid')
+    # Get filename
+    filename = os.path.basename(path)
+    h1 = hashlib.md5()
+    h1.update(filename.encode(encoding='utf-8'))
+    e_filename = h1.hexdigest()
+    frames_output_path = '/root/data/flask/frames/' + e_filename
+    extract_frame(path, frames_output_path)
+    pose_output_path = '/root/data/flask/json/' + e_filename
+    extract_pose(frames_output_path, pose_output_path)
+    model = init_model()
+    data = make_data(pose_output_path)
+    ret, midi_ids = model(data)
+    midi = []
+    for it in ret:
+        midi.append(midi_ids[it])
+    midi_output_path = '/root/data/flask/midi/' + e_filename
+    np.savez(midi_output_path, np.array(midi))
+    return midi_output_path
+
+
+def extract_frame(video_path, output_path):
+    basename = os.path.basename(video_path)
+    frames = 12
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+    cmd = 'ffmpeg -i ' + video_path + ' -r ' + str(frames) + ' ' + output_path + '/' + basename + '.%4d.jpg > /dev/null'
+    os.system(cmd)
+
 
 def extract_pose(frame_dir, output_path):
-    # 提取节点信息
+    OPENPOSE_ROOT = '/root/data/openpose/'
+    #  ./build/examples/openpose/openpose.bin --image_dir /home/pikachu/Desktop/test --write_json /home/pikachu/Desktop/test --net_resolution 192x144 --display 0
+    bin_path = OPENPOSE_ROOT + '/build/examples/openpose/openpose.bin'
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+    cmd = bin_path + ' --image_dir ' + frame_dir + ' --write_json ' + output_path + ' --display 0 --keypoint_scale 3 > /dev/null'
+    os.system(cmd)
     pass
+
+
 @app.route('/upload_file', methods=['GET'])
 def upload_index():
     return """
@@ -77,10 +145,10 @@ def upload_file():
         return jsonify(ret)
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        # 对视频进行配乐
-        # 选取三首配乐的url地址返回给客户端
-        ret['data'] = ['url1', 'url2', 'url3']
+        path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(path)
+        path = generate_music(path)
+        ret['data'] = [path]
         return jsonify(ret)
     else:
         ret['status'] = False

@@ -24,7 +24,7 @@ from chainer.datasets import tuple_dataset
 
 def get_tuple(data):
     data = np.array(data)
-    print('get_tuple data:',data.shape)
+    print('get_tuple data:', data.shape)
     t_data = []
     t_label = []
     for it in data:
@@ -35,8 +35,8 @@ def get_tuple(data):
         t_label.append(np.array(it[1]).astype(np.int32))
     t_data = np.array(t_data)
     t_label = np.array(t_label)
-    print("t_data:",t_data.shape)
-    print("t_data[0].shape:",t_data[0].shape)
+    print("t_data:", t_data.shape)
+    print("t_data[0].shape:", t_data[0].shape)
     return tuple_dataset.TupleDataset(t_data, t_label)
 
 
@@ -61,11 +61,11 @@ def get_data():
 
     train = np.array(train)
     test = np.array(test)
-    print(len(train), len(test),train.shape,test.shape)
+    print(len(train), len(test), train.shape, test.shape)
     print(len(train[0]))
     train = get_tuple(train)
     test = get_tuple(test)
-    return train,test
+    return train, test
 
 
 if __name__ == '__main__':

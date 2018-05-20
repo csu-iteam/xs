@@ -30,17 +30,23 @@ from model import XSNet, Classifier
 import datasets
 from chainer.dataset import concat_examples
 from chainer.backends.cuda import to_cpu
+
+
 def load_midi_snippet(path):
     with open(path) as f:
-        midi_snippets = {line.strip(): i + 1 for i,line in enumerate(f)}
+        midi_snippets = {line.strip(): i + 1 for i, line in enumerate(f)}
         midi_snippets['0'] = 0
     return midi_snippets
+
+
 def handle_data(data):
     for i in range(len(data)):
         for j in range(len(data[i][1])):
             data[i][1][j] = data[i][1][j] + 1
 
     return data
+
+
 def convert(batch, device):
     def to_device_batch(batch):
         if device is None:
@@ -51,13 +57,14 @@ def convert(batch, device):
             xp = cuda.cupy.get_array_module(*batch)
             concat = xp.concatenate(batch, axis=0)
             sections = np.cumsum([len(x)
-                                     for x in batch[:-1]], dtype=np.int32)
+                                  for x in batch[:-1]], dtype=np.int32)
             concat_dev = chainer.dataset.to_device(device, concat)
             batch_dev = cuda.cupy.split(concat_dev, sections)
             return batch_dev
 
     return {'xs': to_device_batch([x for x, _ in batch]),
             'ys': to_device_batch([y for _, y in batch])}
+
 
 def main():
     parser = argparse.ArgumentParser(description='Chainer example: MNIST')
@@ -79,7 +86,7 @@ def main():
                         help='number of layers')
     parser.add_argument('--noplot', dest='plot', action='store_false',
                         help='Disable PlotReport extension')
-    parser.add_argument('--target_midi','-t', default='../midi/database.txt',
+    parser.add_argument('--target_midi', '-t', default='../midi/database.txt',
                         help='target midi snippet')
     parser.add_argument('--log-interval', type=int, default=200,
                         help='number of iteration to show log')
@@ -93,7 +100,6 @@ def main():
     print('# layer: {}'.format(args.layer))
     print('')
 
-
     # Load the MNIST dataset
     train, test = datasets.get_data()
     print('train', len(train))
@@ -103,7 +109,7 @@ def main():
     # iteration, which will be used by the PrintReport extension below.
     # handle mide snippets
     target_midi_ids = load_midi_snippet(args.target_midi)
-    target_midi_ids = {i:w for w, i in target_midi_ids.items()}
+    target_midi_ids = {i: w for w, i in target_midi_ids.items()}
     # The label of the training set, the subscript starts from 0.
     # Here, I leave 0 as empty, so all the labels need to be +1
     train = handle_data(train)
@@ -179,117 +185,6 @@ def main():
     # Run the training
     trainer.run()
 
-def my_concat(batch, device=None, padding=None):
-    """
-    Separate data and labels
-    :param batch:
-    :param device:
-    :param padding:
-    :return:
-    """
-    # print(batch)
-    data = []
-    label = []
-    for it in batch:
-        data.append(it[0])
-        label.append(it[1])
-    data = np.array(data)
-    label = np.array(label)
-    return data,label
-    # exit(0)
-    # pass
-
-def manula_train_loop():
-    parser = argparse.ArgumentParser(description='Chainer example: MNIST')
-    parser.add_argument('--batchsize', '-b', type=int, default=10,
-                        help='Number of images in each mini-batch')
-    parser.add_argument('--epoch', '-e', type=int, default=20,
-                        help='Number of sweeps over the dataset to train')
-    parser.add_argument('--frequency', '-f', type=int, default=-1,
-                        help='Frequency of taking a snapshot')
-    parser.add_argument('--gpu', '-g', type=int, default=-1,
-                        help='GPU ID (negative value indicates CPU)')
-    parser.add_argument('--out', '-o', default='result',
-                        help='Directory to output the result')
-    parser.add_argument('--resume', '-r', default='',
-                        help='Resume the training from snapshot')
-    parser.add_argument('--unit', '-u', type=int, default=1000,
-                        help='Number of units')
-    parser.add_argument('--layer', '-l', type=int, default=3,
-                        help='number of layers')
-    parser.add_argument('--noplot', dest='plot', action='store_false',
-                        help='Disable PlotReport extension')
-    args = parser.parse_args()
-
-    print('GPU: {}'.format(args.gpu))
-    print('# unit: {}'.format(args.unit))
-    print('# Minibatch-size: {}'.format(args.batchsize))
-    print('# epoch: {}'.format(args.epoch))
-    print('')
-
-    # Set up a neural network to train
-    # Classifier reports softmax cross entropy loss and accuracy at every
-    # iteration, which will be used by the PrintReport extension below.
-    n_rhythm = 1000
-    model = Classifier(XSNet(args.layer, 54, n_rhythm, args.unit))
-    if args.gpu >= 0:
-        # Make a specified GPU currentsoftmax_cross_entropy
-        chainer.backends.cuda.get_device_from_id(args.gpu).use()
-        model.to_gpu()  # Copy the model to the GPU
-
-    # Setup an optimizer
-    optimizer = chainer.optimizers.Adam()
-    optimizer.setup(model)
-
-    # Load the MNIST dataset
-    train, test = datasets.get_data()
-    print('train', len(train))
-    # exit(0)
-
-    train_iter = chainer.iterators.SerialIterator(train, args.batchsize)
-    test_iter = chainer.iterators.SerialIterator(test, args.batchsize,
-                                                 repeat=False, shuffle=False)
-    max_epoch = 10
-    while train_iter.epoch < max_epoch:
-        train_batch = train_iter.next()
-        # print(train_batch)
-        # data_train, target_train = convert(train_batch, args.gpu)
-        data = convert(train_batch, args.gpu)
-        # prediction_train = model(data_train,target_train)
-        prediction_train = model(data['xs'],data['ys'])
-        # print(prediction_train)
-        loss = F.softmax_cross_entropy(prediction_train, target_train)
-        model.cleargrads()
-
-        loss.backward()
-        optimizer.update()
-
-        if train_iter.is_new_epoch:
-            print('epoch:{:02d} train_loss:{:.04f} '.format(
-                train_iter.epoch, float(to_cpu(loss.data))
-            ), end='')
-            test_losses = []
-            test_accuracies = []
-            while True:
-                test_batch = test_iter.next()
-                data_test, target_test = convert(test_batch, args.gpu)
-                prediction_test = model(data_test)
-                loss_test = F.softmax_cross_entropy(prediction_test, target_test)
-                test_losses.append(to_cpu(loss_test.data))
-                accuracy = F.accuracy(prediction_test, target_test)
-
-                if test_iter.is_new_epoch:
-                    test_iter.epoch = 0
-                    test_iter.current_position = 0
-                    test_iter.is_new_epoch = False
-                    test_iter._pushed_position = None
-                    break
-
-            print('val_loss:{:.04f} val_accuracy:{:.04f}'.format(
-                np.mean(test_losses), np.mean(test_accuracies)
-            ))
-
 
 if __name__ == '__main__':
     main()
-    # manula_train_loop()

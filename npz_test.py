@@ -1,4 +1,5 @@
 import numpy as np
+
 data = np.load('/home/pikachu/Documents/pose.npz')
 a = data['arr_0']
 print(a.shape)
