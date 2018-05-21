@@ -55,6 +55,13 @@ def search_tempo(position, tempo_list):
     return tempo_list[len(tempo_list) - 1][1]
 
 
+# def search_tempo(position, tempo_list):
+#     for x in range(len(tempo_list)):
+#         if tempo_list[x][0] > position:
+#             return x - 1
+#     return len(tempo_list) - 1
+
+
 def channel_merge(l_list):
     l_list = sorted(l_list, key=lambda unit: unit[1])
     return l_list
@@ -71,7 +78,7 @@ def analysis(midi_txt_name):
     l_point = 0
     # nList is used for saving which pitch has not end;
     n_list = [0] * 10000
-    tempo_list = []
+    tempo_list = [[0, 0, 0]]
     for line in midi_file:
         temp = line.split()
         if temp[0] == MFile:
@@ -87,7 +94,7 @@ def analysis(midi_txt_name):
             if temp[1] == Tempo:
                 # do tempo
                 # tempo = int(temp[2])
-                tempo_list.append([0, int(temp[2])])
+                tempo_list.append([0, int(temp[2]), 0])  # start_position tempo start_time
             elif temp[1] == KeySig:
                 # do KeySig
                 continue
@@ -108,6 +115,9 @@ def analysis(midi_txt_name):
                 unit[0] = n
                 tempo = search_tempo(int(temp[0]), tempo_list)
                 unit[1] = exchange_time(int(temp[0]), dis, tempo)
+
+                # print(unit[1])
+
                 n_list[n] = int(temp[0])
                 v = find_value(temp[4])
                 unit[3] = divide_vol(v)
@@ -126,6 +136,10 @@ def analysis(midi_txt_name):
                 unit[0] = n
                 tempo = search_tempo(int(temp[0]), tempo_list)
                 unit[1] = exchange_time(int(temp[0]), dis, tempo)
+                # if int(temp[0])==249600:
+                # print("AAAAAAAA"+str(unit[1]))
+                # print(unit[1])
+
                 n_list[n] = l_point
                 v = find_value(temp[4])
                 unit[3] = divide_vol(v)
@@ -141,6 +155,7 @@ def analysis(midi_txt_name):
                 l_list[li][4] = divide_vol(v)
             elif temp[1] == Tempo:
                 # tempo = int(temp[2])
+
                 tempo_list.append([int(temp[0]), int(temp[2])])
             elif temp[1] == Par:
                 continue
