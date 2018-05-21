@@ -52,6 +52,7 @@ def extract(midi_label, frame_num):
     cur_dir = os.path.split(os.path.realpath(__file__))[0]
     l_list = mda.analysis(cur_dir + "/midiTxt/" + midi_file)
     l_list = mda.channel_merge(l_list)
+    print(l_list)
     label_list = dbi.make_data(fps, l_list, frame_num)
     dbi.export_database("database.txt")
     return label_list
@@ -69,7 +70,8 @@ def make_midi(midi_name, label_list):
 
 
 if __name__ == '__main__':
-    extract(5, 3000)
+    label_list = extract(5, 3600)
+    print label_list
     # for x in range(6):
     #     extract(x, 3000)
     exit(0)
