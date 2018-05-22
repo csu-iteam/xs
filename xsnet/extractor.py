@@ -117,6 +117,7 @@ class DataExtractor(object):
 
         return np.array(data).astype(np.float32)
 
+    def extract_folder(self, ):
 
 if __name__ == '__main__':
     ex = FramesExtractor()
