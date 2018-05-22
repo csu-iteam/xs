@@ -1,7 +1,8 @@
 import sys
-
-sys.path.append('./midi')
 import os
+sys.path.append('./midi')
+cur_dir = os.path.split(os.path.realpath(__file__))[0]
+sys.path.append(cur_dir)
 import MidiFileAnalysis as mda, DataBaseInit as dbi
 
 fps = 12  # frame per second

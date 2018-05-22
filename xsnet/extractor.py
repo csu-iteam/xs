@@ -20,6 +20,26 @@ import os, sys
 import os.path
 import json
 import numpy as np
+import midi.DriveMidiConversion
+
+
+def get_type_num(dir):
+    data = {
+        'BboomBboom': 0,
+        'Confession_Balloon': 2,
+        'seve': 5,
+        'goodtime': 6,
+        'jilejingtu': 5,
+        'panama': 1,
+        'shapeofyou': 3
+    }
+    return data[dir]
+
+
+def get_label(type_name, n_len):
+    num = get_type_num(type_name)
+    labels = midi.DriveMidiConversion.extract(num, n_len)
+    return np.array(labels).astype(np.int32)
 
 
 class FramesExtractor(object):
@@ -85,11 +105,15 @@ class DataExtractor(object):
         if not os.path.exists(json_file_path):
             raise Exception("file: {} not exist".format(json_file_path))
         f = open(json_file_path, 'r')
-        data = f.read()
+        data = f.read().strip()
         if len(data) == 0:
             raise Exception('file content is empty')
         f.close()
-        data = json.loads(data)
+        try:
+            data = json.loads(data)
+        except json.decoder.JSONDecodeError as e:
+            print(e)
+            return None
         people = data['people']
         if people is None:
             raise Exception('data: {} has not people info'.format(data))
@@ -117,7 +141,51 @@ class DataExtractor(object):
 
         return np.array(data).astype(np.float32)
 
-    def extract_folder(self, ):
+    def _extract_folder1(self, folder_path, with_label=True):
+        if not os.path.exists(folder_path):
+            raise Exception('folder: {} not exist'.format(folder_path))
+        data = []
+        labels = []
+        for it in os.listdir(folder_path):
+            file_path = os.path.join(folder_path, it)
+            ret = self.extract(file_path)
+            data.append(ret)
+            if with_label:
+                type = os.path.basename(folder_path)
+                label = get_label(type, len(ret))
+                labels.append(label)
+
+        return data, labels
+
+    def extract_folder1(self, folder_path, with_label=True):
+        ret = self._extract_folder1(folder_path, with_label)
+        if with_label:
+            return np.array(ret[0]), np.array(ret[1])
+        else:
+            return np.array(ret[0]),
+
+    def extract_folder2(self, folder_path, with_label=True):
+        if not os.path.exists(folder_path):
+            raise Exception('folder: {} not exist'.format(folder_path))
+        data = []
+        labels = []
+        for it in os.listdir(folder_path):
+            dir_path = os.path.join(folder_path, it)
+            ret = self._extract_folder1(dir_path, with_label)
+            data.extend(ret[0])
+            if with_label:
+                labels.extend(ret[1])
+
+        if with_label:
+            return np.array(data), np.array(labels)
+        return np.array(data),
+
+    def extract_folder(self, folder_path, folder_level=2):
+        if not os.path.exists(folder_path):
+            raise Exception('folder: {} not exist'.format(folder_path))
+        if folder_level > 2:
+            raise Exception('unsupport level > 2')
+
 
 if __name__ == '__main__':
     ex = FramesExtractor()
@@ -126,5 +194,15 @@ if __name__ == '__main__':
     # ex.extract(video_path, output_path)
     # ex = PoseExtractor()
     ex = DataExtractor()
-    ret = ex.extract('/home/pikachu/Documents/json/seve/Video1_clip.mp4')
-    print(ret.shape)
+    # ret = ex.extract('/home/pikachu/Documents/json/seve/Video1_clip.mp4')
+    # ret = ex.extract_folder1('/home/pikachu/Documents/json/seve')
+    # ret = ex.extract_folder2('/home/pikachu/Documents/json')
+    npz = 'data_with_label.npz'
+    # np.savez(npz, ret[0], ret[1])
+    ret = np.load(npz)
+    ret0 = ret['arr_0']
+    ret1 = ret['arr_1']
+    # print(ret.shape)
+    print(ret0.shape,ret1.shape)
+    # for it in range(len(ret0)):
+    #     print('{} <-> {}'.format(ret0[it]),ret1[it])

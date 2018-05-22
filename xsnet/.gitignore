@@ -5,3 +5,5 @@ train.error
 train.log
 pose.npz.BboomBboom
 pose.npz.jilejingtu
+data.npz
+data_with_label.npz
