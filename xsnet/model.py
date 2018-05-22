@@ -77,6 +77,41 @@ class XSNet(Chain):
         return loss
 
 
+    def translate(self, xs):
+        batch = len(xs)
+        with chainer.no_backprop_mode(), chainer.using_config('train', False):
+            xs = [x[::-1] for x in xs]
+            exs = []
+            for it in xs:
+                t = self.embed_x(it)
+                exs.append(t)
+            h, c, _ = self.encoder(None, None, exs)
+            ys = self.xp.full(batch, 0, np.int32)
+            result = []
+            for i in range(len(xs)):
+                eys = self.embed_y(ys)
+                eys = F.split_axis(eys, batch, 0)
+                h, c, ys = self.decoder(h, c, eys)
+                cys = F.concat(ys, axis=0)
+                wy = self.W(cys)
+                ys = self.xp.argmax(wy.data, axis=1).astype(np.int32)
+                result.append(ys)
+
+        # Using `xp.concatenate(...)` instead of `xp.stack(result)` here to
+        # support NumPy 1.9.
+        result = cuda.to_cpu(
+            self.xp.concatenate([self.xp.expand_dims(x, 0) for x in result]).T)
+
+        return result
+        # Remove EOS taggs
+        outs = []
+        for y in result:
+            inds = np.argwhere(y == 0)
+            if len(inds) > 0:
+                y = y[:inds[0, 0]]
+            outs.append(y)
+        return outs
+
 class Classifier(Chain):
     compute_accuracy = True
 
