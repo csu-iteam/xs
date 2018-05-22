@@ -35,7 +35,8 @@ from chainer import reporter
 def sequence_embed(embed, xs):
     x_len = [len(x) for x in xs]
     x_section = np.cumsum(x_len[:-1])
-    ex = embed(F.concat(xs, axis=0))
+    t = F.concat(xs, axis=0)
+    ex = embed(t)
     exs = F.split_axis(ex, x_section, 0)
     return exs
 
@@ -53,102 +54,64 @@ class XSNet(Chain):
         self.n_layers = n_layers
         self.n_units = n_units
 
-    def __call__(self, xs, ys):
-        eys = sequence_embed(self.embed_y, ys)
+    def __call__(self, xs, ys=None):
         xs = [x[::-1] for x in xs]
-        # xs = np.array(xs)
-        # exs = self.embed_x(xs)
-        # exs = [self.embed_x(it) for it in xs]
-        exs = []
-        for it in xs:
-            t = self.embed_x(it)
-            exs.append(t)
+        exs = sequence_embed(self.embed_x, xs)
+        if ys is None:
+            ys = [0 for i in range(len(xs))]
+        eys = sequence_embed(self.embed_y, ys)
         hx, cx, _ = self.encoder(None, None, exs)
         _, _, os = self.decoder(hx, cx, eys)
-        batch = len(xs)
+        # batch = len(xs)
         concat_os = F.concat(os, axis=0)
-        concat_ys_out = F.concat(ys, axis=0)
-        loss = F.sum(F.softmax_cross_entropy(self.W(concat_os), concat_ys_out, reduce='no')) / batch
-        chainer.report({'loss': loss.data}, self)
+        h = self.W(concat_os)
+        # concat_ys_out = F.concat(ys, axis=0)
+        # loss = F.sum(F.softmax_cross_entropy(self.W(concat_os), concat_ys_out, reduce='no')) / batch
+        # chainer.report({'loss': loss.data}, self)
 
-        n_words = concat_ys_out.shape[0]
-        perp = self.xp.exp(loss.data * batch / n_words)
-        chainer.report({'perp': perp}, self)
-        return loss
+        # n_words = concat_ys_out.shape[0]
+        # perp = self.xp.exp(loss.data * batch / n_words)
+        # chainer.report({'perp': perp}, self)
+        return h
 
 
     def translate(self, xs):
         batch = len(xs)
         with chainer.no_backprop_mode(), chainer.using_config('train', False):
-            xs = [x[::-1] for x in xs]
-            exs = []
-            for it in xs:
-                t = self.embed_x(it)
-                exs.append(t)
-            h, c, _ = self.encoder(None, None, exs)
+            exs = self.embed_x(xs)
             ys = self.xp.full(batch, 0, np.int32)
-            result = []
-            for i in range(len(xs)):
-                eys = self.embed_y(ys)
-                eys = F.split_axis(eys, batch, 0)
-                h, c, ys = self.decoder(h, c, eys)
-                cys = F.concat(ys, axis=0)
-                wy = self.W(cys)
-                ys = self.xp.argmax(wy.data, axis=1).astype(np.int32)
-                result.append(ys)
-
-        # Using `xp.concatenate(...)` instead of `xp.stack(result)` here to
-        # support NumPy 1.9.
-        result = cuda.to_cpu(
-            self.xp.concatenate([self.xp.expand_dims(x, 0) for x in result]).T)
-
-        return result
-        # Remove EOS taggs
-        outs = []
-        for y in result:
-            inds = np.argwhere(y == 0)
-            if len(inds) > 0:
-                y = y[:inds[0, 0]]
-            outs.append(y)
-        return outs
+            eys = self.embed_y(ys)
+            h, c, _ = self.encoder(None, None, (exs,))
+            _, _, os = self.decoder(h, c, (eys,))
+            concat_os = F.concat(os, axis=0)
+            ret = self.W(concat_os)
+            return ret
 
 class Classifier(Chain):
     compute_accuracy = True
 
     def __init__(self, predictor,
-                 lossfun=softmax_cross_entropy.softmax_cross_entropy,
-                 accfun=accuracy.accuracy,
-                 label_key=-1):
-        if not (isinstance(label_key, (int, str))):
-            raise TypeError('label_key must be int or str, but is %s' %
-                            type(label_key))
+                 accfun=accuracy.accuracy):
 
         super(Classifier, self).__init__()
-        self.lossfun = lossfun
         self.accfun = accfun
         self.y = None
         self.loss = None
         self.accuracy = None
-        self.label_key = label_key
 
         with self.init_scope():
             self.predictor = predictor
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, xs, ys):
+        concat_ys_out = F.concat(ys, axis=0)
+        batch = len(xs)
         self.y = None
         self.loss = None
         self.accuracy = None
-        self.y = self.predictor(*args, **kwargs)
-        self.loss = self.lossfun(self.y, t)
+        self.y = self.predictor(xs, ys)
+        self.loss = F.sum(F.softmax_cross_entropy(self.y, concat_ys_out, reduce='no'))/batch
         reporter.report({'loss': self.loss}, self)
         if self.compute_accuracy:
-            self.accuracy = self.accfun(self.y, t)
+            self.accuracy = self.accfun(self.y, concat_ys_out)
             reporter.report({'accuracy': self.accuracy}, self)
         return self.loss
-        # Code from zijin
-        # x = self.predictor(x, t)
-        # label = np.transpose(t)[0]
-        # cross_entropy = F.mean(F.softmax_cross_entropy(x, label))
-        # accuracy = F.accuracy(x, label)
-        # chainer.report({'loss': cross_entropy, 'accuracy': accuracy}, self)
-        # return cross_entropy

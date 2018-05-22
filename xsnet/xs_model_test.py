@@ -12,17 +12,21 @@ def my_test():
     test = handle_data(test)
     n_rhythm = len(target_midi_ids)
     # model = Classifier(XSNet(args.layer, 54, n_rhythm, args.unit))
-    model = XSNet(3, 54, n_rhythm, 1024)
+    # model = XSNet(3, 54, n_rhythm, 1024)
+    model = XSNet(3, 54, n_rhythm, 10)
     config.train = False
     # model = XSNet()
     # serializers.load_npz('/home/pikachu/Documents/snapshot_iter_6250.jilejingtu', model)
     # serializers.load_npz('/home/pikachu/Documents/snapshot_iter_2719', model)
     test = convert(test,-1)
-    test_data = test['xs']
+    test_data = test['xs'][0]
     # print(test_data)
     ret = model.translate(test_data)
-    print(ret)
-
+    # ret = model(test_data)
+    # print(ret)
+    ret = map(lambda x:x.argmax(), ret.data)
+    # print(ret)
+    print(list(ret))
 
 if __name__ == '__main__':
     my_test()
