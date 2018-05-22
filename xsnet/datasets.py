@@ -20,7 +20,7 @@ For Audio, use midi file to construct data
 """
 import numpy as np
 from chainer.datasets import tuple_dataset
-
+import random
 
 def get_tuple(data):
     data = np.array(data)
@@ -67,6 +67,35 @@ def get_data():
     test = get_tuple(test)
     return train, test
 
+def get_new_tuple(data_list):
+    data = []
+    label = []
+    for it in data_list:
+        data.append(it[0])
+        label.append(it[1])
+
+    data = np.array(data)
+    label = np.array(label)
+    return tuple_dataset.TupleDataset(data, label)
+def get_new_data():
+    npz = 'data_with_label.npz'
+    ret = np.load(npz)
+    ret0 = ret['arr_0']
+    ret1 = ret['arr_1']
+    l_ret0 = ret0.tolist()
+    l_ret1 = ret1.tolist()
+    ret = zip(l_ret0,l_ret1)
+    l_ret = list(ret)
+    random.shuffle(l_ret)
+    n_len = len(l_ret)
+    n = n_len * 0.9
+    n = int(n)
+    train = l_ret[:n]
+    test = l_ret[n+1:]
+    train = get_new_tuple(train)
+    test = get_new_tuple(test)
+    return train, test
 
 if __name__ == '__main__':
-    get_data()
+    # get_data()
+    get_new_data()

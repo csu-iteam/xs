@@ -101,7 +101,8 @@ def main():
     print('')
 
     # Load the MNIST dataset
-    train, test = datasets.get_data()
+    # train, test = datasets.get_data()
+    train, test = datasets.get_new_data()
     print('train', len(train))
     # exit(0)
     # Set up a neural network to train
