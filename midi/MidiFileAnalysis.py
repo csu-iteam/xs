@@ -26,10 +26,17 @@ def find_value(temp_x):
 
 # translate pitch position into time duration in 1/600 second according to the tempo and distinguishability.
 # using 1/600 second will be convenience for matching fps
-def exchange_time(position, dis, tempo):
-    speed = 60000000 / tempo
+# def exchange_time(position, dis, tempo):
+#     speed = 60000000 / tempo
+#     time = 1.0 * position / dis / speed * 36000
+#     return int(round(time))
+def exchange_time(position, dis, tempo_point, tempo_list):
+    speed = 1.0 * 60000000 / tempo_list[tempo_point][1]
+    pre_position = tempo_list[tempo_point][0]
+    pre_time = tempo_list[tempo_point - 1][2]
+    position = position - pre_position
     time = 1.0 * position / dis / speed * 36000
-    return int(round(time))
+    return time + pre_time
 
 
 # find the position of the pitch according to the steps and fps.Set default speed as 60,dis as 480.
@@ -47,19 +54,19 @@ def divide_vol(vol):
     return divided_vol
 
 
-def search_tempo(position, tempo_list):
-    for x in tempo_list:
-        if x[0] > position:
-            return temp[1]
-        temp = x
-    return tempo_list[len(tempo_list) - 1][1]
-
-
 # def search_tempo(position, tempo_list):
-#     for x in range(len(tempo_list)):
-#         if tempo_list[x][0] > position:
-#             return x - 1
-#     return len(tempo_list) - 1
+#     for x in tempo_list:
+#         if x[0] > position:
+#             return temp[1]
+#         temp = x
+#     return tempo_list[len(tempo_list) - 1][1]
+
+
+def search_tempo(position, tempo_list):
+    for x in range(len(tempo_list)):
+        if tempo_list[x][0] > position:
+            return x - 1
+    return len(tempo_list) - 1
 
 
 def channel_merge(l_list):
@@ -113,9 +120,10 @@ def analysis(midi_txt_name):
                 unit = [0 for i in range(5)]
                 n = find_value(temp[3])
                 unit[0] = n
-                tempo = search_tempo(int(temp[0]), tempo_list)
-                unit[1] = exchange_time(int(temp[0]), dis, tempo)
-
+                # tempo = search_tempo(int(temp[0]), tempo_list)
+                # unit[1] = exchange_time(int(temp[0]), dis, tempo)
+                tempo_point = search_tempo(int(temp[0]), tempo_list)
+                unit[1] = exchange_time(int(temp[0]), dis, tempo_point, tempo_list)
                 # print(unit[1])
 
                 n_list[n] = int(temp[0])
@@ -134,12 +142,11 @@ def analysis(midi_txt_name):
                 unit = [0 for i in range(5)]
                 n = find_value(temp[3])
                 unit[0] = n
-                tempo = search_tempo(int(temp[0]), tempo_list)
-                unit[1] = exchange_time(int(temp[0]), dis, tempo)
+                tempo_point = search_tempo(int(temp[0]), tempo_list)
+                unit[1] = exchange_time(int(temp[0]), dis, tempo_point, tempo_list)
                 # if int(temp[0])==249600:
                 # print("AAAAAAAA"+str(unit[1]))
                 # print(unit[1])
-
                 n_list[n] = l_point
                 v = find_value(temp[4])
                 unit[3] = divide_vol(v)
@@ -150,13 +157,19 @@ def analysis(midi_txt_name):
                 end_time = int(temp[0])
                 v = find_value(temp[4])
                 li = n_list[n]
-                tempo = search_tempo(int(temp[0]), tempo_list)
-                l_list[li][2] = exchange_time(int(end_time), dis, tempo)
+
+                # tempo = search_tempo(int(temp[0]), tempo_list)
+                # l_list[li][2] = exchange_time(int(end_time), dis, tempo)
+                tempo_point = search_tempo(int(temp[0]), tempo_list)
+                l_list[li][2] = exchange_time(int(end_time), dis, tempo_point, tempo_list)
+
                 l_list[li][4] = divide_vol(v)
             elif temp[1] == Tempo:
                 # tempo = int(temp[2])
+                tempo_list.append([int(temp[0]), int(temp[2]), 0])
+                endtime = exchange_time(int(temp[0]), dis, len(tempo_list) - 2, tempo_list)
+                tempo_list[len(tempo_list) - 2][2] = endtime
 
-                tempo_list.append([int(temp[0]), int(temp[2])])
             elif temp[1] == Par:
                 continue
             elif temp[1] == TimeSig:
