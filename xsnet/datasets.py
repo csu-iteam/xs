@@ -71,6 +71,12 @@ def get_new_tuple(data_list):
     data = []
     label = []
     for it in data_list:
+        if len(it[0]) == 0:
+            continue
+        assert len(it[0]) != 0
+        assert len(it[0]) == len(it[1])
+        for x in it[0]:
+            assert len(x) == 54
         data.append(it[0])
         label.append(it[1])
 
@@ -86,7 +92,15 @@ def get_new_data():
     l_ret1 = ret1.tolist()
     ret = zip(l_ret0,l_ret1)
     l_ret = list(ret)
-    random.shuffle(l_ret)
+    # random.shuffle(l_ret)
+    # ================
+    n_len = len(l_ret)
+    # index = n_len * 0.618
+    # index = index * 0.618
+    # index = int(index)
+    # l_ret = l_ret[:index]
+    # l_ret = l_ret[:151]
+    # =================
     n_len = len(l_ret)
     n = n_len * 0.9
     n = int(n)

@@ -136,6 +136,7 @@ class DataExtractor(object):
                     ret = [0 for i in range(54)]
                 else:
                     ret = last
+            assert len(ret) != 0
             last = ret
             data.append(np.array(ret).astype(np.float32))
 
@@ -196,13 +197,13 @@ if __name__ == '__main__':
     ex = DataExtractor()
     # ret = ex.extract('/home/pikachu/Documents/json/seve/Video1_clip.mp4')
     # ret = ex.extract_folder1('/home/pikachu/Documents/json/seve')
-    # ret = ex.extract_folder2('/home/pikachu/Documents/json')
+    ret = ex.extract_folder2('/home/pikachu/Documents/json')
     npz = 'data_with_label.npz'
-    # np.savez(npz, ret[0], ret[1])
-    ret = np.load(npz)
-    ret0 = ret['arr_0']
-    ret1 = ret['arr_1']
+    np.savez(npz, ret[0], ret[1])
+    # ret = np.load(npz)
+    # ret0 = ret['arr_0']
+    # ret1 = ret['arr_1']
     # print(ret.shape)
-    print(ret0.shape,ret1.shape)
+    # print(ret0.shape,ret1.shape)
     # for it in range(len(ret0)):
     #     print('{} <-> {}'.format(ret0[it]),ret1[it])

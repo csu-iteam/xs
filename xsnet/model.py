@@ -31,11 +31,12 @@ from chainer.functions.loss import softmax_cross_entropy
 from chainer.functions.evaluation import accuracy
 from chainer import reporter
 
-
 def sequence_embed(embed, xs):
     x_len = [len(x) for x in xs]
     x_section = np.cumsum(x_len[:-1])
     t = F.concat(xs, axis=0)
+    if t.data.shape[0] == 0:
+        print('t.data.shape:{}'.format(t.data.shape))
     ex = embed(t)
     exs = F.split_axis(ex, x_section, 0)
     return exs

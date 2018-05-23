@@ -104,6 +104,7 @@ def main():
     # train, test = datasets.get_data()
     train, test = datasets.get_new_data()
     print('train', len(train))
+    print('test',len(test))
     # exit(0)
     # Set up a neural network to train
     # Classifier reports softmax cross entropy loss and accuracy at every
@@ -113,9 +114,10 @@ def main():
     target_midi_ids = {i: w for w, i in target_midi_ids.items()}
     # The label of the training set, the subscript starts from 0.
     # Here, I leave 0 as empty, so all the labels need to be +1
-    train = handle_data(train)
-    test = handle_data(test)
+    # train = handle_data(train)
+    # test = handle_data(test)
     n_rhythm = len(target_midi_ids)
+    print('# rhythm: {}'.format(n_rhythm))
     model = Classifier(XSNet(args.layer, 54, n_rhythm, args.unit))
     # model = XSNet(args.layer, 54, n_rhythm, args.unit)
     if args.gpu >= 0:
@@ -127,7 +129,7 @@ def main():
     optimizer = chainer.optimizers.Adam()
     optimizer.setup(model)
 
-    train_iter = chainer.iterators.SerialIterator(train, args.batchsize)
+    train_iter = chainer.iterators.SerialIterator(train, args.batchsize, repeat=False, shuffle=False)
     test_iter = chainer.iterators.SerialIterator(test, args.batchsize,
                                                  repeat=False, shuffle=False)
 
