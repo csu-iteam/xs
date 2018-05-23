@@ -33,6 +33,10 @@ from chainer.backends.cuda import to_cpu
 
 
 def load_midi_snippet(path):
+    """
+    把所有的标签加１
+    把零作为空
+    """
     with open(path) as f:
         midi_snippets = {line.strip(): i + 1 for i, line in enumerate(f)}
         midi_snippets['0'] = 0
@@ -40,6 +44,9 @@ def load_midi_snippet(path):
 
 
 def handle_data(data):
+    """
+    这里想把数组的长度变成一样的
+    """
     for i in range(len(data)):
         for j in range(len(data[i][1])):
             data[i][1][j] = data[i][1][j] + 1
@@ -48,6 +55,9 @@ def handle_data(data):
 
 
 def convert(batch, device):
+    """
+    变成字典
+    """
     def to_device_batch(batch):
         if device is None:
             return batch
@@ -90,6 +100,9 @@ def main():
                         help='target midi snippet')
     parser.add_argument('--log-interval', type=int, default=200,
                         help='number of iteration to show log')
+    parser.add_argument('--dataset-path',  
+        default='/home/pikachu/swcontest/xs/xsnet/data_with_label_split_none.npz',
+                        help='dataset path')
     args = parser.parse_args()
 
     print('GPU: {}'.format(args.gpu))
@@ -102,7 +115,7 @@ def main():
 
     # Load the MNIST dataset
     # train, test = datasets.get_data()
-    train, test = datasets.get_new_data()
+    train, test = datasets.get_new_data(args.dataset_path)
     print('train', len(train))
     print('test',len(test))
     # exit(0)
@@ -116,6 +129,7 @@ def main():
     # Here, I leave 0 as empty, so all the labels need to be +1
     # train = handle_data(train)
     # test = handle_data(test)
+    # 这里有必要加零吗？
     n_rhythm = len(target_midi_ids)
     print('# rhythm: {}'.format(n_rhythm))
     model = Classifier(XSNet(args.layer, 54, n_rhythm, args.unit))
@@ -140,11 +154,11 @@ def main():
 
     trainer.extend(extensions.LogReport(
         trigger=(args.log_interval, 'iteration')))
-    trainer.extend(extensions.PrintReport(
-        ['epoch', 'iteration', 'main/loss', 'validation/main/loss',
-         'main/perp', 'validation/main/perp', 'validation/main/bleu',
-         'elapsed_time']),
-        trigger=(args.log_interval, 'iteration'))
+    # trainer.extend(extensions.PrintReport(
+        # ['epoch', 'iteration', 'main/loss', 'validation/main/loss',
+         # 'main/perp', 'validation/main/perp', 'validation/main/bleu',
+         # 'elapsed_time']),
+        # trigger=(args.log_interval, 'iteration'))
     # Evaluate the model with the test dataset for each epoch
     trainer.extend(extensions.Evaluator(test_iter, model, converter=convert, device=args.gpu))
 

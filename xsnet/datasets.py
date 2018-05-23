@@ -83,8 +83,9 @@ def get_new_tuple(data_list):
     data = np.array(data)
     label = np.array(label)
     return tuple_dataset.TupleDataset(data, label)
-def get_new_data():
-    npz = 'data_with_label.npz'
+def get_new_data(path='data_with_label.npz'):
+    # npz = 'data_with_label.npz'
+    npz = path
     ret = np.load(npz)
     ret0 = ret['arr_0']
     ret1 = ret['arr_1']
