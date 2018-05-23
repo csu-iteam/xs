@@ -129,7 +129,7 @@ def main():
     optimizer = chainer.optimizers.Adam()
     optimizer.setup(model)
 
-    train_iter = chainer.iterators.SerialIterator(train, args.batchsize, repeat=False, shuffle=False)
+    train_iter = chainer.iterators.SerialIterator(train, args.batchsize)
     test_iter = chainer.iterators.SerialIterator(test, args.batchsize,
                                                  repeat=False, shuffle=False)
 
