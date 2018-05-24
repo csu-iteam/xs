@@ -229,7 +229,7 @@ class DataExtractor(object):
         for it in os.listdir(folder_path):
             dir_path = os.path.join(folder_path, it)
             if split_none:
-                ret = self._extract_folder1_and_split_none(dir_path, with_label)
+                ret = self._extract_folder1_and_split_none(dir_path, with_label=with_label)
             else:
                 ret = self._extract_folder1(dir_path, with_label)
             data.extend(ret[0])
@@ -257,8 +257,9 @@ if __name__ == '__main__':
     # ret = ex.extract('/home/pikachu/Documents/json/seve/Video1_clip.mp4')
     # ret = ex.extract_folder1('/home/pikachu/Documents/json/seve', split_none=True)
     # print('ret[0].shape:{} ret[1].shape:{}'.format(ret[0].shape, ret[1].shape))
-    # ret = ex.extract_folder2('/home/pikachu/Documents/json')
-    ret = ex.extract_folder1('/root/data/google_driver/json/seve', split_none=True)
+    # ret = ex.extract_folder2('/home/pikachu/Documents/json', split_none=True)
+    # ret = ex.extract_folder1('/root/data/google_driver/json/seve', split_none=True)
+    ret = ex.extract_folder2('/root/data/google_driver/json', split_none=True)
     npz = 'data_with_label_split_none.npz'
     np.savez(npz, ret[0], ret[1])
     # ret = np.load(npz)
