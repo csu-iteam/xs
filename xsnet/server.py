@@ -30,7 +30,7 @@ import numpy as np
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = '/home/pikachu/Desktop/'
+UPLOAD_FOLDER = '/root/data/video/'
 ALLOWED_EXTENSIONS = set(['mp4'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -70,7 +70,7 @@ def make_data(path):
 def generate_music(path):
     # If it is not a video, throw an exception file type error
     if os.path.exists(path):
-        raise Exception('file not exist')
+        raise Exception('file:{} not exist'.format(path))
     if path.endswith('.mp4'):
         raise Exception('file is invalid')
     # Get filename
@@ -156,8 +156,9 @@ def upload_file():
         filename = secure_filename(file.filename)
         path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(path)
-        # path = generate_music(path)
-        ret['data'] = ['url1','url2']
+        print('file :{} '.format(path))
+	path = generate_music(path)
+        ret['data'] = ['url1','url2',path]
         return jsonify(ret)
     else:
         ret['status'] = False
@@ -166,9 +167,11 @@ def upload_file():
         return jsonify(ret)
 
 if __name__=='__main__':
-    app.run(
-host='0.0.0.0',
-port=80,
-debug=True
-)
+#    app.run(
+#host='0.0.0.0',
+#port=80,
+#debug=True
+#)
+   path ='/root/data/video/v1.mp4'
+   generate_music(path)
 
