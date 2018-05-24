@@ -49,7 +49,7 @@ def my_test_2():
     n_rhythm = len(target_midi_ids)
     print('rhythm: {}'.format(n_rhythm))
     model = XSNet(3, 54, n_rhythm, 1024)
-    npz_path = 'result/model_epoch-3'
+    npz_path = 'result/model_epoch-15'
     serializers.load_npz(npz_path, model)
     # chainer.backends.cuda.get_device_from_id(0).use()
     # model.to_gpu()
