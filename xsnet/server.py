@@ -94,10 +94,16 @@ def generate_music(path):
     data = ex.extract(pose_output_path)
     print('data: {} '.format(data))
     ret = model.translate(data)
+    
+    ret = map(lambda x: x.argmax(), ret.data)
+    print('ret: {}'.format(ret))
+    # 将序列转换为mp3文件，然后放在当前目录下的static文件夹中，返回给客户端
     midi = []
     for it in ret:
         midi.append(target_midi_ids[it])
-    midi_output_path = '/root/data/flask/midi/' + e_filename
+    path = cur_dir + '/' + e_filename
+    # midi_output_path = '/root/data/flask/midi/' + e_filename
+    midi_output_path = path
     np.savez(midi_output_path, np.array(midi))
     return midi_output_path
 
@@ -160,7 +166,8 @@ def upload_file():
         path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(path)
         # path = generate_music(path)
-        ret['data'] = ['url1','url2']
+        url = 'http://47.95.203.153/static/panama.mp3'
+        ret['data'] = [url, url, url]
         return jsonify(ret)
     else:
         ret['status'] = False
@@ -169,6 +176,6 @@ def upload_file():
         return jsonify(ret)
 
 if __name__=='__main__':
-#     app.run(host='0.0.0.0', port=80, debug=True)
-    path = '/root/data/video/v1.mp4'
-    generate_music(path)
+    app.run(host='0.0.0.0', port=80, debug=True)
+    # path = '/root/data/video/v1.mp4'
+    # generate_music(path)
