@@ -213,7 +213,7 @@ class DataExtractor(object):
         else:
         	ret = self._extract_folder1(folder_path, with_label)
         if with_label:
-            return np.array(ret[0]), np.array(ret[1])
+            return np.array(ret[0]).astype(np.float32), np.array(ret[1]).astype(np.int32)
         else:
             return np.array(ret[0]),
 
