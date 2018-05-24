@@ -186,10 +186,22 @@ class DataExtractor(object):
                 t_data = ret[last_pos:it]
                 # 保证每个数据项不为空
                 if len(t_data) != 0:
-                    data.append(np.array(t_data))
+                    # 对数据进行分割，每个的大小控制在200个以内
+                    t_ind = 0
+                    while t_ind < len(t_data):
+                        end_ind = min(t_ind + 200, len(t_data))
+                        t_sub_data = t_data[t_ind:end_ind]
+                        t_ind = t_ind + 200
+                        data.append(np.array(t_sub_data))
+                    # data.append(np.array(t_data))
                     if with_label:
                         t_label = label[last_pos:it]
-                        labels.append(np.array(t_label).astype(np.int32))
+                        t_ind = 0
+                        while t_ind < len(t_label):
+                            end_ind = min(t_ind + 200, len(t_label))
+                            t_sub_label = t_label[t_ind:end_ind]
+                            t_ind = t_ind + 200
+                            labels.append(np.array(t_sub_label).astype(np.int32))
                 last_pos = it + 1
         # 是否已经把最后一个算进去了？　在列表后面再加一个最后的下标
         # 如果最后一个本身是空，也不影响结果
@@ -262,10 +274,10 @@ if __name__ == '__main__':
     ret = ex.extract_folder2('/root/data/google_driver/json', split_none=True)
     npz = 'data_with_label_split_none.npz'
     np.savez(npz, ret[0], ret[1])
-    # ret = np.load(npz)
-    # ret0 = ret['arr_0']
-    # ret1 = ret['arr_1']
-    # print('ret0.shape:{} ret1.shape:{}'.format(ret0.shape, ret1.shape))
+    ret = np.load(npz)
+    ret0 = ret['arr_0']
+    ret1 = ret['arr_1']
+    print('ret0.shape:{} ret1.shape:{}'.format(ret0.shape, ret1.shape))
     # print(ret.shape)
     # print(ret0.shape,ret1.shape)
     # for it in range(len(ret0)):

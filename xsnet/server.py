@@ -35,14 +35,15 @@ ALLOWED_EXTENSIONS = set(['mp4'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 app.config['SECRET_KEY'] = os.urandom(24)
-
+cur_dir = os.path.split(os.path.realpath(__file__))[0]
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 def init_model():
-    target_midi_ids = load_midi_snippet('../midi/database.txt')
+    path = os.path.join(cur_dir, '../midi/database.txt')
+    target_midi_ids = load_midi_snippet(path)
     target_midi_ids = {i: w for w, i in target_midi_ids.items()}
     n_rhythm = len(target_midi_ids)
     model = XSNet(3, 54, n_rhythm, 1024)
@@ -69,9 +70,9 @@ def make_data(path):
 
 def generate_music(path):
     # If it is not a video, throw an exception file type error
-    if os.path.exists(path):
-        raise Exception('file:{} not exist'.format(path))
-    if path.endswith('.mp4'):
+    if not os.path.exists(path):
+        raise Exception('file: {}  not exist'.format(path))
+    if not path.endswith('.mp4'):
         raise Exception('file is invalid')
     # Get filename
     filename = os.path.basename(path)
@@ -86,15 +87,23 @@ def generate_music(path):
     ex = PoseExtractor('/root/data/openpose')
     ex.extract(frames_output_path, pose_output_path)
     # extract_pose(frames_output_path, pose_output_path)
-    model = init_model()
+    model, target_midi_ids = init_model()
     # data = make_data(pose_output_path)
     ex = DataExtractor()
+    # 这里需要测试
     data = ex.extract(pose_output_path)
-    ret, midi_ids = model(data)
+    print('data: {} '.format(data))
+    ret = model.translate(data)
+    
+    ret = map(lambda x: x.argmax(), ret.data)
+    print('ret: {}'.format(ret))
+    # 将序列转换为mp3文件，然后放在当前目录下的static文件夹中，返回给客户端
     midi = []
     for it in ret:
-        midi.append(midi_ids[it])
-    midi_output_path = '/root/data/flask/midi/' + e_filename
+        midi.append(target_midi_ids[it])
+    path = cur_dir + '/' + e_filename
+    # midi_output_path = '/root/data/flask/midi/' + e_filename
+    midi_output_path = path
     np.savez(midi_output_path, np.array(midi))
     return midi_output_path
 
@@ -156,9 +165,9 @@ def upload_file():
         filename = secure_filename(file.filename)
         path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(path)
-        print('file :{} '.format(path))
-	path = generate_music(path)
-        ret['data'] = ['url1','url2',path]
+        # path = generate_music(path)
+        url = 'http://47.95.203.153/static/panama.mp3'
+        ret['data'] = [url, url, url]
         return jsonify(ret)
     else:
         ret['status'] = False
@@ -167,11 +176,6 @@ def upload_file():
         return jsonify(ret)
 
 if __name__=='__main__':
-#    app.run(
-#host='0.0.0.0',
-#port=80,
-#debug=True
-#)
-   path ='/root/data/video/v1.mp4'
-   generate_music(path)
-
+    app.run(host='0.0.0.0', port=80, debug=True)
+    # path = '/root/data/video/v1.mp4'
+    # generate_music(path)
