@@ -165,8 +165,9 @@ def upload_file():
         filename = secure_filename(file.filename)
         path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(path)
-        path = generate_music(path)
-        ret['data'] = ['url1','url2', path]
+        # path = generate_music(path)
+        url = 'http://47.95.203.153/static/panama.mp3'
+        ret['data'] = [url, url, url]
         return jsonify(ret)
     else:
         ret['status'] = False
