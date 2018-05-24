@@ -30,19 +30,20 @@ import numpy as np
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = '/home/pikachu/Desktop/'
+UPLOAD_FOLDER = '/root/data/video/'
 ALLOWED_EXTENSIONS = set(['mp4'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 app.config['SECRET_KEY'] = os.urandom(24)
-
+cur_dir = os.path.split(os.path.realpath(__file__))[0]
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 def init_model():
-    target_midi_ids = load_midi_snippet('../midi/database.txt')
+    path = os.path.join(cur_dir, '../midi/database.txt')
+    target_midi_ids = load_midi_snippet(path)
     target_midi_ids = {i: w for w, i in target_midi_ids.items()}
     n_rhythm = len(target_midi_ids)
     model = XSNet(3, 54, n_rhythm, 1024)
@@ -69,9 +70,9 @@ def make_data(path):
 
 def generate_music(path):
     # If it is not a video, throw an exception file type error
-    if os.path.exists(path):
-        raise Exception('file not exist')
-    if path.endswith('.mp4'):
+    if not os.path.exists(path):
+        raise Exception('file: {}  not exist'.format(path))
+    if not path.endswith('.mp4'):
         raise Exception('file is invalid')
     # Get filename
     filename = os.path.basename(path)
@@ -90,6 +91,7 @@ def generate_music(path):
     # data = make_data(pose_output_path)
     ex = DataExtractor()
     data = ex.extract(pose_output_path)
+    print('data: {} '.format(data))
     ret, midi_ids = model(data)
     midi = []
     for it in ret:
@@ -166,9 +168,6 @@ def upload_file():
         return jsonify(ret)
 
 if __name__=='__main__':
-    app.run(
-host='0.0.0.0',
-port=80,
-debug=True
-)
-
+#     app.run(host='0.0.0.0', port=80, debug=True)
+    path = '/root/data/video/v1.mp4'
+    generate_music(path)
