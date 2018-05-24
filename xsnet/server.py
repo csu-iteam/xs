@@ -22,7 +22,7 @@ from werkzeug.utils import secure_filename
 import hashlib
 from model import XSNet
 from train import load_midi_snippet
-import../ convert_to_dataset_with_label  as mk_data
+# import ../convert_to_dataset_with_label  as mk_data
 import numpy as np
 
 app = Flask(__name__)
@@ -147,11 +147,19 @@ def upload_file():
         filename = secure_filename(file.filename)
         path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(path)
-        path = generate_music(path)
-        ret['data'] = [path]
+        # path = generate_music(path)
+        ret['data'] = ['url1','url2']
         return jsonify(ret)
     else:
         ret['status'] = False
         ret['code'] = 400
         ret['msg'] = 'File not valid. Please upload .mp4 file.'
         return jsonify(ret)
+
+if __name__=='__main__':
+    app.run(
+host='0.0.0.0',
+port=80,
+debug=True
+)
+
