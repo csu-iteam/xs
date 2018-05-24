@@ -95,6 +95,7 @@ class XSNet(Chain):
                 cys = F.concat(ys, axis=0)
                 wy = self.W(cys)
                 ys = self.xp.argmax(wy.data, axis=1).astype(np.int32)
+                print(wy,ys)
                 result.append(ys)
 
             # Using `xp.concatenate(...)` instead of `xp.stack(result)` here to
@@ -125,8 +126,11 @@ class Classifier(Chain):
         self.loss = None
         self.accuracy = None
         self.y = self.predictor(xs, ys)
+        out_ys = self.predictor.xp.argmax(self.y.data, axis=1).astype(np.int32)
+	pre_ys = self.predictor.translate(xs[0])
+        print(out_ys, ys, pre_ys)
         # 查看每次训练的结果
-        ret = map(lambda x: x.argmax(), self.y.data)
+        # ret = map(lambda x: x.argmax(), self.y.data)
         # print(list(ret))
 
         # print('label: {}'.format(ys))
