@@ -76,17 +76,29 @@ class XSNet(Chain):
         return h
 
 
-    def translate(self, xs):
+    def translate(self, xs, max_length=3):
         batch = len(xs)
         with chainer.no_backprop_mode(), chainer.using_config('train', False):
-            exs = self.embed_x(xs)
-            ys = self.xp.full(batch, 0, np.int32)
-            eys = self.embed_y(ys)
+            xs = [x[::-1] for x in xs]
+            exs = sequence_embed(self.embed_x, xs)
+            # exs = self.embed_x(xs)
             h, c, _ = self.encoder(None, None, (exs,))
-            _, _, os = self.decoder(h, c, (eys,))
-            concat_os = F.concat(os, axis=0)
-            ret = self.W(concat_os)
-            return ret
+            ys = self.xp.full(batch, 1, np.int32)
+            result = []
+            for i in range(max_length):
+                eys = self.embed_y(ys)
+                eys = F.split_axis(eys,batch,0)
+                _, _, os = self.decoder(h, c, (eys,))
+                concat_os = F.concat(os, axis=0)
+                ret = self.W(concat_os)
+                ys = self.xp.argmax(ret.data, axis=1).astype(np.int32)
+                result.append(ys)
+
+            # Using `xp.concatenate(...)` instead of `xp.stack(result)` here to
+            # support np 1.9.
+            result = cuda.to_cpu(
+                self.xp.concatenate([self.xp.expand_dims(x, 0) for x in result]).T)
+            return result
 
 class Classifier(Chain):
     compute_accuracy = True
