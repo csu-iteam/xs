@@ -42,17 +42,17 @@ def my_test():
 
 def my_test_2():
     ex = DataExtractor()
-    # ret = ex.extract('/home/pikachu/Documents/json/seve/Video1_clip.mp4')
-    ret = ex.extract('/root/data/google_driver/json/seve/Video149.mpg')
+    ret = ex.extract('/home/pikachu/Documents/json/seve/Video1_clip.mp4')
+    # ret = ex.extract('/root/data/google_driver/json/seve/Video149.mpg')
     target_midi_ids = load_midi_snippet('../midi/database.txt')
     target_midi_ids = {i: w for w, i in target_midi_ids.items()}
     n_rhythm = len(target_midi_ids)
     print('rhythm: {}'.format(n_rhythm))
     model = XSNet(3, 54, n_rhythm, 1024)
     npz_path = 'result/model_epoch-80'
-    serializers.load_npz(npz_path, model)
-    chainer.backends.cuda.get_device_from_id(0).use()
-    model.to_gpu()
+    # serializers.load_npz(npz_path, model)
+    # chainer.backends.cuda.get_device_from_id(0).use()
+    # model.to_gpu()
 
     # serializers.load_npz('result/snapshot_iter_239', model)
     config.train = False
@@ -66,8 +66,8 @@ def my_test_2():
             batch_dev = cuda.cupy.split(concat_dev, sections)
             return batch_dev
     # ret = to_gpu(ret)
-    with cupy.cuda.Device(device):
-        ret = cupy.array(ret)
+    # with cupy.cuda.Device(device):
+    #     ret = cupy.array(ret)
     ret = model.translate(ret)
     ret = map(lambda x: x.argmax(), ret.data)
     print(list(ret))
