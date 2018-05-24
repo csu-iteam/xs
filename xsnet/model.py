@@ -95,7 +95,7 @@ class XSNet(Chain):
                 cys = F.concat(ys, axis=0)
                 wy = self.W(cys)
                 ys = self.xp.argmax(wy.data, axis=1).astype(np.int32)
-                print(wy,ys)
+                print('output:',ys)
                 result.append(ys)
 
             # Using `xp.concatenate(...)` instead of `xp.stack(result)` here to
