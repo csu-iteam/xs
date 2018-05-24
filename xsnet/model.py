@@ -78,8 +78,9 @@ class XSNet(Chain):
 
 
     def translate(self, xs, max_length=3):
+        max_length = len(xs)
         xs = [xs]
-	batch = len(xs)
+        batch = len(xs)
         with chainer.no_backprop_mode(), chainer.using_config('train', False):
             xs = [x[::-1] for x in xs]
             exs = sequence_embed(self.embed_x, xs)
@@ -90,10 +91,10 @@ class XSNet(Chain):
             for i in range(max_length):
                 eys = self.embed_y(ys)
                 eys = F.split_axis(eys,batch,0)
-                _, _, os = self.decoder(h, c, eys)
-                concat_os = F.concat(os, axis=0)
-                ret = self.W(concat_os)
-                ys = self.xp.argmax(ret.data, axis=1).astype(np.int32)
+                h, c, ys = self.decoder(h, c, eys)
+                cys = F.concat(ys, axis=0)
+                wy = self.W(cys)
+                ys = self.xp.argmax(wy.data, axis=1).astype(np.int32)
                 result.append(ys)
 
             # Using `xp.concatenate(...)` instead of `xp.stack(result)` here to
