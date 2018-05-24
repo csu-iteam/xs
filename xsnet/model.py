@@ -17,6 +17,7 @@
 Define a neural network that converts the rhythm of motion into music
 Based on information already available define a neural network similar to Seq2Seq
 """
+import cupy as cp
 import numpy as np
 import chainer
 from chainer.backends import cuda
@@ -125,6 +126,10 @@ class Classifier(Chain):
         # 查看每次训练的结果
         ret = map(lambda x: x.argmax(), self.y.data)
         # print(list(ret))
+
+        # print('label: {}'.format(ys))
+        # print(cp.asnumpy(ret))
+
         self.loss = F.sum(F.softmax_cross_entropy(self.y, concat_ys_out, reduce='no'))/batch
         reporter.report({'loss': self.loss}, self)
         if self.compute_accuracy:
