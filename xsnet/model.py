@@ -78,7 +78,8 @@ class XSNet(Chain):
 
 
     def translate(self, xs, max_length=3):
-        batch = len(xs)
+        xs = [xs]
+	batch = len(xs)
         with chainer.no_backprop_mode(), chainer.using_config('train', False):
             xs = [x[::-1] for x in xs]
             exs = sequence_embed(self.embed_x, xs)

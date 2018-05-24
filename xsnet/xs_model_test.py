@@ -69,8 +69,9 @@ def my_test_2():
     # with cupy.cuda.Device(device):
     #     ret = cupy.array(ret)
     ret = model.translate(ret)
-    ret = map(lambda x: x.argmax(), ret.data)
-    print(list(ret))
+    print(ret)
+    # ret = map(lambda x: x.argmax(), ret.data)
+    # print(list(ret))
 
 
 if __name__ == '__main__':
