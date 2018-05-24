@@ -78,7 +78,8 @@ def get_new_tuple(data_list):
         for x in it[0]:
             assert len(x) == 54
         data.append(it[0])
-        label.append(it[1])
+        # 为了方便后续的计算，对每个标签进行加１
+        label.append(it[1]+1)
 
     data = np.array(data)
     label = np.array(label)

@@ -31,7 +31,7 @@ import argparse
 from chainer.functions.loss import softmax_cross_entropy
 from chainer.functions.evaluation import accuracy
 from chainer import reporter
-
+EOS = 0
 def sequence_embed(embed, xs):
     x_len = [len(x) for x in xs]
     x_section = np.cumsum(x_len[:-1])
@@ -56,37 +56,34 @@ class XSNet(Chain):
         self.n_layers = n_layers
         self.n_units = n_units
 
-    def __call__(self, xs, ys=None):
+    def __call__(self, xs, ys):
         xs = [x[::-1] for x in xs]
+        eos = self.xp.array([EOS], np.int32)
+        ys_in = [F.concat([eos, y], axis=0) for y in ys]
         exs = sequence_embed(self.embed_x, xs)
-        if ys is None:
-            ys = [0 for i in range(len(xs))]
-        eys = sequence_embed(self.embed_y, ys)
+        eys = sequence_embed(self.embed_y, ys_in)
         hx, cx, _ = self.encoder(None, None, exs)
         _, _, os = self.decoder(hx, cx, eys)
-        # batch = len(xs)
         concat_os = F.concat(os, axis=0)
         h = self.W(concat_os)
-        # concat_ys_out = F.concat(ys, axis=0)
-        # loss = F.sum(F.softmax_cross_entropy(self.W(concat_os), concat_ys_out, reduce='no')) / batch
-        # chainer.report({'loss': loss.data}, self)
-
-        # n_words = concat_ys_out.shape[0]
-        # perp = self.xp.exp(loss.data * batch / n_words)
-        # chainer.report({'perp': perp}, self)
         return h
 
 
     def translate(self, xs, max_length=3):
+        """
+        每次保证只传一个视频
+        :param xs:
+        :param max_length:
+        :return:
+        """
         max_length = len(xs)
         xs = [xs]
         batch = len(xs)
         with chainer.no_backprop_mode(), chainer.using_config('train', False):
             xs = [x[::-1] for x in xs]
             exs = sequence_embed(self.embed_x, xs)
-            # exs = self.embed_x(xs)
             h, c, _ = self.encoder(None, None, exs)
-            ys = self.xp.full(batch, 1, np.int32)
+            ys = self.xp.full(batch, EOS, np.int32)
             result = []
             for i in range(max_length):
                 eys = self.embed_y(ys)
@@ -95,7 +92,6 @@ class XSNet(Chain):
                 cys = F.concat(ys, axis=0)
                 wy = self.W(cys)
                 ys = self.xp.argmax(wy.data, axis=1).astype(np.int32)
-                print('output:',ys)
                 result.append(ys)
 
             # Using `xp.concatenate(...)` instead of `xp.stack(result)` here to
@@ -120,22 +116,11 @@ class Classifier(Chain):
             self.predictor = predictor
 
     def __call__(self, xs, ys):
-        concat_ys_out = F.concat(ys, axis=0)
+        eos = self.xp.array([EOS], np.int32)
+        ys_out = [F.concat([y, eos], axis=0) for y in ys]
+        concat_ys_out = F.concat(ys_out, axis=0)
         batch = len(xs)
-        self.y = None
-        self.loss = None
-        self.accuracy = None
         self.y = self.predictor(xs, ys)
-        out_ys = self.predictor.xp.argmax(self.y.data, axis=1).astype(np.int32)
-	pre_ys = self.predictor.translate(xs[0])
-        print(out_ys, ys, pre_ys)
-        # 查看每次训练的结果
-        # ret = map(lambda x: x.argmax(), self.y.data)
-        # print(list(ret))
-
-        # print('label: {}'.format(ys))
-        # print(cp.asnumpy(ret))
-
         self.loss = F.sum(F.softmax_cross_entropy(self.y, concat_ys_out, reduce='no'))/batch
         reporter.report({'loss': self.loss}, self)
         if self.compute_accuracy:
