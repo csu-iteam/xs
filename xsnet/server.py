@@ -87,15 +87,16 @@ def generate_music(path):
     ex = PoseExtractor('/root/data/openpose')
     ex.extract(frames_output_path, pose_output_path)
     # extract_pose(frames_output_path, pose_output_path)
-    model = init_model()
+    model, target_midi_ids = init_model()
     # data = make_data(pose_output_path)
     ex = DataExtractor()
+    # 这里需要测试
     data = ex.extract(pose_output_path)
     print('data: {} '.format(data))
-    ret, midi_ids = model(data)
+    ret = model.translate(data)
     midi = []
     for it in ret:
-        midi.append(midi_ids[it])
+        midi.append(target_midi_ids[it])
     midi_output_path = '/root/data/flask/midi/' + e_filename
     np.savez(midi_output_path, np.array(midi))
     return midi_output_path
