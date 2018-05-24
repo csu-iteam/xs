@@ -83,13 +83,13 @@ class XSNet(Chain):
             xs = [x[::-1] for x in xs]
             exs = sequence_embed(self.embed_x, xs)
             # exs = self.embed_x(xs)
-            h, c, _ = self.encoder(None, None, (exs,))
+            h, c, _ = self.encoder(None, None, exs)
             ys = self.xp.full(batch, 1, np.int32)
             result = []
             for i in range(max_length):
                 eys = self.embed_y(ys)
                 eys = F.split_axis(eys,batch,0)
-                _, _, os = self.decoder(h, c, (eys,))
+                _, _, os = self.decoder(h, c, eys)
                 concat_os = F.concat(os, axis=0)
                 ret = self.W(concat_os)
                 ys = self.xp.argmax(ret.data, axis=1).astype(np.int32)
