@@ -22,7 +22,10 @@ from werkzeug.utils import secure_filename
 import hashlib
 from model import XSNet
 from train import load_midi_snippet
-# import ../convert_to_dataset_with_label  as mk_data
+
+# import../ convert_to_dataset_with_label  as mk_data
+from extractor import FramesExtractor, PoseExtractor, DataExtractor
+
 import numpy as np
 
 app = Flask(__name__)
@@ -76,11 +79,17 @@ def generate_music(path):
     h1.update(filename.encode(encoding='utf-8'))
     e_filename = h1.hexdigest()
     frames_output_path = '/root/data/flask/frames/' + e_filename
-    extract_frame(path, frames_output_path)
+    ex = FramesExtractor()
+    ex.extract(path, frames_output_path)
+    # extract_frame(path, frames_output_path)
     pose_output_path = '/root/data/flask/json/' + e_filename
-    extract_pose(frames_output_path, pose_output_path)
+    ex = PoseExtractor('/root/data/openpose')
+    ex.extract(frames_output_path, pose_output_path)
+    # extract_pose(frames_output_path, pose_output_path)
     model = init_model()
-    data = make_data(pose_output_path)
+    # data = make_data(pose_output_path)
+    ex = DataExtractor()
+    data = ex.extract(pose_output_path)
     ret, midi_ids = model(data)
     midi = []
     for it in ret:

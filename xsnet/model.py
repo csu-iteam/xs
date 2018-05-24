@@ -110,6 +110,9 @@ class Classifier(Chain):
         self.loss = None
         self.accuracy = None
         self.y = self.predictor(xs, ys)
+        # 查看每次训练的结果
+        ret = map(lambda x: x.argmax(), self.y.data)
+        print(list(ret))
         self.loss = F.sum(F.softmax_cross_entropy(self.y, concat_ys_out, reduce='no'))/batch
         reporter.report({'loss': self.loss}, self)
         if self.compute_accuracy:

@@ -38,8 +38,9 @@ def load_midi_snippet(path):
     把零作为空
     """
     with open(path) as f:
-        midi_snippets = {line.strip(): i + 1 for i, line in enumerate(f)}
-        midi_snippets['0'] = 0
+        midi_snippets = {line.strip(): i for i, line in enumerate(f)}
+        # midi_snippets = {line.strip(): i + 1 for i, line in enumerate(f)}
+        # midi_snippets['0'] = 0
     return midi_snippets
 
 
