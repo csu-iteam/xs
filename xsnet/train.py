@@ -100,8 +100,7 @@ def main():
                         help='target midi snippet')
     parser.add_argument('--log-interval', type=int, default=200,
                         help='number of iteration to show log')
-    parser.add_argument('--dataset-path',  
-        default='/home/pikachu/swcontest/xs/xsnet/data_with_label_split_none.npz',
+    parser.add_argument('--dataset-path', default='data_with_label_split_none.npz',
                         help='dataset path')
     args = parser.parse_args()
 
