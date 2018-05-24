@@ -31,7 +31,10 @@ import argparse
 from chainer.functions.loss import softmax_cross_entropy
 from chainer.functions.evaluation import accuracy
 from chainer import reporter
+
 EOS = 0
+
+
 def sequence_embed(embed, xs):
     x_len = [len(x) for x in xs]
     x_section = np.cumsum(x_len[:-1])
@@ -68,7 +71,6 @@ class XSNet(Chain):
         h = self.W(concat_os)
         return h
 
-
     def translate(self, xs, max_length=3):
         """
         每次保证只传一个视频
@@ -87,7 +89,7 @@ class XSNet(Chain):
             result = []
             for i in range(max_length):
                 eys = self.embed_y(ys)
-                eys = F.split_axis(eys,batch,0)
+                eys = F.split_axis(eys, batch, 0)
                 h, c, ys = self.decoder(h, c, eys)
                 cys = F.concat(ys, axis=0)
                 wy = self.W(cys)
@@ -100,12 +102,12 @@ class XSNet(Chain):
                 self.xp.concatenate([self.xp.expand_dims(x, 0) for x in result]).T)
             return result
 
+
 class Classifier(Chain):
     compute_accuracy = True
 
     def __init__(self, predictor,
                  accfun=accuracy.accuracy):
-
         super(Classifier, self).__init__()
         self.accfun = accfun
         self.y = None
@@ -121,7 +123,7 @@ class Classifier(Chain):
         concat_ys_out = F.concat(ys_out, axis=0)
         batch = len(xs)
         self.y = self.predictor(xs, ys)
-        self.loss = F.sum(F.softmax_cross_entropy(self.y, concat_ys_out, reduce='no'))/batch
+        self.loss = F.sum(F.softmax_cross_entropy(self.y, concat_ys_out, reduce='no')) / batch
         reporter.report({'loss': self.loss}, self)
         if self.compute_accuracy:
             self.accuracy = self.accfun(self.y, concat_ys_out)

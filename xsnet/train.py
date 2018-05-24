@@ -30,7 +30,9 @@ from model import XSNet, Classifier
 import datasets
 from chainer.dataset import concat_examples
 from chainer.backends.cuda import to_cpu
+
 EOS = 0
+
 
 def load_midi_snippet(path):
     """
@@ -59,6 +61,7 @@ def convert(batch, device):
     """
     变成字典
     """
+
     def to_device_batch(batch):
         if device is None:
             return batch
@@ -117,7 +120,7 @@ def main():
     # train, test = datasets.get_data()
     train, test = datasets.get_new_data(args.dataset_path)
     print('train', len(train))
-    print('test',len(test))
+    print('test', len(test))
     # exit(0)
     # Set up a neural network to train
     # Classifier reports softmax cross entropy loss and accuracy at every
@@ -144,7 +147,7 @@ def main():
     optimizer.setup(model)
 
     train_iter = chainer.iterators.SerialIterator(train, args.batchsize)
-    test_iter = chainer.iterators.SerialIterator(test, args.batchsize,repeat=False, shuffle=False)
+    test_iter = chainer.iterators.SerialIterator(test, args.batchsize, repeat=False, shuffle=False)
 
     # Set up a trainer
     updater = training.updaters.StandardUpdater(train_iter, optimizer, converter=convert, device=args.gpu)
@@ -169,15 +172,17 @@ def main():
 
     # Save two plot images to the result dir
     if args.plot and extensions.PlotReport.available():
-        trainer.extend(extensions.PlotReport(['main/loss', 'validation/main/loss'],'epoch', file_name='loss.png'))
-        trainer.extend(extensions.PlotReport(['main/accuracy', 'validation/main/accuracy'],'epoch', file_name='accuracy.png'))
+        trainer.extend(extensions.PlotReport(['main/loss', 'validation/main/loss'], 'epoch', file_name='loss.png'))
+        trainer.extend(
+            extensions.PlotReport(['main/accuracy', 'validation/main/accuracy'], 'epoch', file_name='accuracy.png'))
 
     # Print selected entries of the log to stdout
     # Here "main" refers to the target link of the "main" optimizer again, and
     # "validation" refers to the default name of the Evaluator extension.
     # Entries other than 'epoch' are reported by the Classifier link, called by
     # either the updater or the evaluator.
-    trainer.extend(extensions.PrintReport(['epoch', 'main/loss', 'validation/main/loss','main/accuracy', 'validation/main/accuracy', 'elapsed_time']))
+    trainer.extend(extensions.PrintReport(
+        ['epoch', 'main/loss', 'validation/main/loss', 'main/accuracy', 'validation/main/accuracy', 'elapsed_time']))
 
     # Print a progress bar to stdout
     trainer.extend(extensions.ProgressBar())

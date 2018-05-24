@@ -22,6 +22,7 @@ import numpy as np
 from chainer.datasets import tuple_dataset
 import random
 
+
 def get_tuple(data):
     data = np.array(data)
     print('get_tuple data:', data.shape)
@@ -67,6 +68,7 @@ def get_data():
     test = get_tuple(test)
     return train, test
 
+
 def get_new_tuple(data_list):
     data = []
     label = []
@@ -79,11 +81,13 @@ def get_new_tuple(data_list):
             assert len(x) == 54
         data.append(it[0])
         # 为了方便后续的计算，对每个标签进行加１
-        label.append(it[1]+1)
+        label.append(it[1] + 1)
 
     data = np.array(data)
     label = np.array(label)
     return tuple_dataset.TupleDataset(data, label)
+
+
 def get_new_data(path='data_with_label.npz'):
     # npz = 'data_with_label.npz'
     npz = path
@@ -92,7 +96,7 @@ def get_new_data(path='data_with_label.npz'):
     ret1 = ret['arr_1']
     l_ret0 = ret0.tolist()
     l_ret1 = ret1.tolist()
-    ret = zip(l_ret0,l_ret1)
+    ret = zip(l_ret0, l_ret1)
     l_ret = list(ret)
     # random.shuffle(l_ret)
     # ================
@@ -107,10 +111,11 @@ def get_new_data(path='data_with_label.npz'):
     n = n_len * 0.9
     n = int(n)
     train = l_ret[:n]
-    test = l_ret[n+1:]
+    test = l_ret[n + 1:]
     train = get_new_tuple(train)
     test = get_new_tuple(test)
     return train, test
+
 
 if __name__ == '__main__':
     # get_data()
