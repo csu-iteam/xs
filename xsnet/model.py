@@ -17,6 +17,7 @@
 Define a neural network that converts the rhythm of motion into music
 Based on information already available define a neural network similar to Seq2Seq
 """
+import cupy as cp
 import numpy as np
 import chainer
 from chainer.backends import cuda
@@ -31,11 +32,15 @@ from chainer.functions.loss import softmax_cross_entropy
 from chainer.functions.evaluation import accuracy
 from chainer import reporter
 
+EOS = 0
+
 
 def sequence_embed(embed, xs):
     x_len = [len(x) for x in xs]
     x_section = np.cumsum(x_len[:-1])
     t = F.concat(xs, axis=0)
+    if t.data.shape[0] == 0:
+        print('t.data.shape:{}'.format(t.data.shape))
     ex = embed(t)
     exs = F.split_axis(ex, x_section, 0)
     return exs
@@ -54,45 +59,55 @@ class XSNet(Chain):
         self.n_layers = n_layers
         self.n_units = n_units
 
-    def __call__(self, xs, ys=None):
+    def __call__(self, xs, ys):
         xs = [x[::-1] for x in xs]
+        eos = self.xp.array([EOS], np.int32)
+        ys_in = [F.concat([eos, y], axis=0) for y in ys]
         exs = sequence_embed(self.embed_x, xs)
-        if ys is None:
-            ys = [0 for i in range(len(xs))]
-        eys = sequence_embed(self.embed_y, ys)
+        eys = sequence_embed(self.embed_y, ys_in)
         hx, cx, _ = self.encoder(None, None, exs)
         _, _, os = self.decoder(hx, cx, eys)
-        # batch = len(xs)
         concat_os = F.concat(os, axis=0)
         h = self.W(concat_os)
-        # concat_ys_out = F.concat(ys, axis=0)
-        # loss = F.sum(F.softmax_cross_entropy(self.W(concat_os), concat_ys_out, reduce='no')) / batch
-        # chainer.report({'loss': loss.data}, self)
-
-        # n_words = concat_ys_out.shape[0]
-        # perp = self.xp.exp(loss.data * batch / n_words)
-        # chainer.report({'perp': perp}, self)
         return h
 
-
-    def translate(self, xs):
+    def translate(self, xs, max_length=3):
+        """
+        每次保证只传一个视频
+        :param xs:
+        :param max_length:
+        :return:
+        """
+        max_length = len(xs)
+        xs = [xs]
         batch = len(xs)
         with chainer.no_backprop_mode(), chainer.using_config('train', False):
-            exs = self.embed_x(xs)
-            ys = self.xp.full(batch, 0, np.int32)
-            eys = self.embed_y(ys)
-            h, c, _ = self.encoder(None, None, (exs,))
-            _, _, os = self.decoder(h, c, (eys,))
-            concat_os = F.concat(os, axis=0)
-            ret = self.W(concat_os)
-            return ret
+            xs = [x[::-1] for x in xs]
+            exs = sequence_embed(self.embed_x, xs)
+            h, c, _ = self.encoder(None, None, exs)
+            ys = self.xp.full(batch, EOS, np.int32)
+            result = []
+            for i in range(max_length):
+                eys = self.embed_y(ys)
+                eys = F.split_axis(eys, batch, 0)
+                h, c, ys = self.decoder(h, c, eys)
+                cys = F.concat(ys, axis=0)
+                wy = self.W(cys)
+                ys = self.xp.argmax(wy.data, axis=1).astype(np.int32)
+                result.append(ys)
+
+            # Using `xp.concatenate(...)` instead of `xp.stack(result)` here to
+            # support np 1.9.
+            result = cuda.to_cpu(
+                self.xp.concatenate([self.xp.expand_dims(x, 0) for x in result]).T)
+            return result
+
 
 class Classifier(Chain):
     compute_accuracy = True
 
     def __init__(self, predictor,
                  accfun=accuracy.accuracy):
-
         super(Classifier, self).__init__()
         self.accfun = accfun
         self.y = None
@@ -103,13 +118,12 @@ class Classifier(Chain):
             self.predictor = predictor
 
     def __call__(self, xs, ys):
-        concat_ys_out = F.concat(ys, axis=0)
+        eos = self.xp.array([EOS], np.int32)
+        ys_out = [F.concat([y, eos], axis=0) for y in ys]
+        concat_ys_out = F.concat(ys_out, axis=0)
         batch = len(xs)
-        self.y = None
-        self.loss = None
-        self.accuracy = None
         self.y = self.predictor(xs, ys)
-        self.loss = F.sum(F.softmax_cross_entropy(self.y, concat_ys_out, reduce='no'))/batch
+        self.loss = F.sum(F.softmax_cross_entropy(self.y, concat_ys_out, reduce='no')) / batch
         reporter.report({'loss': self.loss}, self)
         if self.compute_accuracy:
             self.accuracy = self.accfun(self.y, concat_ys_out)

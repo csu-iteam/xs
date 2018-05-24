@@ -20,6 +20,7 @@ For Audio, use midi file to construct data
 """
 import numpy as np
 from chainer.datasets import tuple_dataset
+import random
 
 
 def get_tuple(data):
@@ -68,5 +69,54 @@ def get_data():
     return train, test
 
 
+def get_new_tuple(data_list):
+    data = []
+    label = []
+    for it in data_list:
+        if len(it[0]) == 0:
+            continue
+        assert len(it[0]) != 0
+        assert len(it[0]) == len(it[1])
+        for x in it[0]:
+            assert len(x) == 54
+        data.append(it[0])
+        # 为了方便后续的计算，对每个标签进行加１
+        label.append(it[1] + 1)
+
+    data = np.array(data)
+    label = np.array(label)
+    return tuple_dataset.TupleDataset(data, label)
+
+
+def get_new_data(path='data_with_label.npz'):
+    # npz = 'data_with_label.npz'
+    npz = path
+    ret = np.load(npz)
+    ret0 = ret['arr_0']
+    ret1 = ret['arr_1']
+    l_ret0 = ret0.tolist()
+    l_ret1 = ret1.tolist()
+    ret = zip(l_ret0, l_ret1)
+    l_ret = list(ret)
+    # random.shuffle(l_ret)
+    # ================
+    n_len = len(l_ret)
+    # index = n_len * 0.618
+    # index = index * 0.618
+    # index = int(index)
+    # l_ret = l_ret[:index]
+    # l_ret = l_ret[:151]
+    # =================
+    n_len = len(l_ret)
+    n = n_len * 0.9
+    n = int(n)
+    train = l_ret[:n]
+    test = l_ret[n + 1:]
+    train = get_new_tuple(train)
+    test = get_new_tuple(test)
+    return train, test
+
+
 if __name__ == '__main__':
-    get_data()
+    # get_data()
+    get_new_data()
