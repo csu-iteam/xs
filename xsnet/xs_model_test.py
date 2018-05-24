@@ -37,7 +37,8 @@ def my_test_2():
     target_midi_ids = {i: w for w, i in target_midi_ids.items()}
     n_rhythm = len(target_midi_ids)
     print('rhythm: {}'.format(n_rhythm))
-    model = XSNet(3, 54, n_rhythm, 10)
+    model = XSNet(3, 54, n_rhythm, 1024)
+    serializers.load_npz('result/snapshot_iter_27375.new', model)
     config.train = False
     ret = model.translate(ret)
     ret = map(lambda x: x.argmax(), ret.data)
