@@ -17,6 +17,7 @@
 Extract data in an object-oriented manner
 """
 import os, sys
+
 sys.path.append('..')
 import os.path
 import json
@@ -125,23 +126,26 @@ class DataExtractor(object):
             return people[0]['pose_keypoints_2d']
 
     def extract_with_none(self, json_path):
-    	"""
-    	对于没有节点信息的图片，去掉，同时考虑分成两个组，递归去做，直到所有的都不为空
-    	"""
-    	if not os.path.exists(json_path):
-    		raise Exception('path not exist')
+        """
+        对于没有节点信息的图片，去掉，同时考虑分成两个组，递归去做，直到所有的都不为空
+        """
+        if not os.path.exists(json_path):
+            raise Exception('path not exist')
 
-    	data = []
-    	for it in os.listdir(json_path):
-    		file_path = os.path.join(json_path, it)
-    		ret = self._get_pose_info(file_path)
-    		data.append(ret)
+        data = []
+        for it in os.listdir(json_path):
+            file_path = os.path.join(json_path, it)
+            ret = self._get_pose_info(file_path)
+            # 这里会导致ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+            if ret is None:
+                data.append(ret)
+            else:
+                data.append(np.array(ret).astype(np.float32))
 
-    	return data
-
+        return data
 
     def extract(self, json_path):
-    	
+
         if not os.path.exists(json_path):
             raise Exception('path not exist')
         last = None
@@ -161,35 +165,35 @@ class DataExtractor(object):
         return np.array(data).astype(np.float32)
 
     def _extract_folder1_and_split_none(self, folder_path, with_label=True):
-    	if not os.path.exists(folder_path):
-    		raise Exception('folder: {} not exist'.format(folder_path))
+        if not os.path.exists(folder_path):
+            raise Exception('folder: {} not exist'.format(folder_path))
 
-    	data = []
-    	labels = []
-    	for it in os.listdir(folder_path):
-    		file_path = os.path.join(folder_path, it)
-    		ret = self.extract_with_none(file_path)
-    		if with_label:
-    			type = os.path.basename(folder_path)
-    			label = get_label(type, len(ret))
-    		# 分割
-    		# 找到所有的下标
-    		ind = [i for i in range(len(ret)) if ret[i] == None]
-    		print(ind)
-    		ind.append(len(ret))
-    		last_pos = 0
-    		for it in ind:
-    			t_data = ret[last_pos:it]
-    			# 保证每个数据项不为空
-    			if len(t_data) != 0:
-    				data.append(t_data)
-    				if with_label:
-    					t_label = label[last_pos:it]
-    					labels.append(t_label)
-    			last_pos = it+1
-    		# 是否已经把最后一个算进去了？　在列表后面再加一个最后的下标
-    		# 如果最后一个本身是空，也不影响结果
-    	return data, labels
+        data = []
+        labels = []
+        for it in os.listdir(folder_path):
+            file_path = os.path.join(folder_path, it)
+            ret = self.extract_with_none(file_path)
+            if with_label:
+                type = os.path.basename(folder_path)
+                label = get_label(type, len(ret))
+            # 分割
+            # 找到所有的下标
+            ind = [i for i in range(len(ret)) if ret[i] is None]
+            print(ind)
+            ind.append(len(ret))
+            last_pos = 0
+            for it in ind:
+                t_data = ret[last_pos:it]
+                # 保证每个数据项不为空
+                if len(t_data) != 0:
+                    data.append(np.array(t_data))
+                    if with_label:
+                        t_label = label[last_pos:it]
+                        labels.append(np.array(t_label).astype(np.int32))
+                last_pos = it + 1
+        # 是否已经把最后一个算进去了？　在列表后面再加一个最后的下标
+        # 如果最后一个本身是空，也不影响结果
+        return data, labels
 
     def _extract_folder1(self, folder_path, with_label=True):
         if not os.path.exists(folder_path):
@@ -208,12 +212,12 @@ class DataExtractor(object):
         return data, labels
 
     def extract_folder1(self, folder_path, with_label=True, split_none=True):
-    	if split_none:
-        	ret = self._extract_folder1_and_split_none(folder_path, with_label)
+        if split_none:
+            ret = self._extract_folder1_and_split_none(folder_path, with_label)
         else:
-        	ret = self._extract_folder1(folder_path, with_label)
+            ret = self._extract_folder1(folder_path, with_label)
         if with_label:
-            return np.array(ret[0]).astype(np.float32), np.array(ret[1]).astype(np.int32)
+            return np.array(ret[0]), np.array(ret[1])
         else:
             return np.array(ret[0]),
 
@@ -225,9 +229,9 @@ class DataExtractor(object):
         for it in os.listdir(folder_path):
             dir_path = os.path.join(folder_path, it)
             if split_none:
-            	ret = self._extract_folder1_and_split_none(dir_path, with_label)
+                ret = self._extract_folder1_and_split_none(dir_path, with_label)
             else:
-            	ret = self._extract_folder1(dir_path, with_label)
+                ret = self._extract_folder1(dir_path, with_label)
             data.extend(ret[0])
             if with_label:
                 labels.extend(ret[1])
@@ -251,16 +255,16 @@ if __name__ == '__main__':
     # ex = PoseExtractor()
     ex = DataExtractor()
     # ret = ex.extract('/home/pikachu/Documents/json/seve/Video1_clip.mp4')
-    # ret = ex.extract_folder1('/home/pikachu/Documents/json/seve', split_none=True)
+    ret = ex.extract_folder1('/home/pikachu/Documents/json/seve', split_none=True)
     # print('ret[0].shape:{} ret[1].shape:{}'.format(ret[0].shape, ret[1].shape))
     # ret = ex.extract_folder2('/home/pikachu/Documents/json')
     ret = ex.extract_folder2('/root/data/google_driver/json')
     npz = 'data_with_label_split_none.npz'
-    # np.savez(npz, ret[0], ret[1])
-    ret = np.load(npz)
-    ret0 = ret['arr_0']
-    ret1 = ret['arr_1']
-    print('ret0.shape:{} ret1.shape:{}'.format(ret0.shape, ret1.shape))
+    np.savez(npz, ret[0], ret[1])
+    # ret = np.load(npz)
+    # ret0 = ret['arr_0']
+    # ret1 = ret['arr_1']
+    # print('ret0.shape:{} ret1.shape:{}'.format(ret0.shape, ret1.shape))
     # print(ret.shape)
     # print(ret0.shape,ret1.shape)
     # for it in range(len(ret0)):
