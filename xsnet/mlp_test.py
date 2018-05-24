@@ -37,9 +37,9 @@ class MLP(chainer.Chain):
         h2 = F.relu(self.l2(h1))
         return self.l3(h2)
 model = MLP(1000,10)
-npz_path = '/root/data/chainer_org/examples/mnist/result/snapshot_iter_12000'
+npz_path = '/root/data/chainer_org/examples/mnist/result/model_epoch-20'
 serializers.load_npz(npz_path, model)
-
+train, test = chainer.datasets.get_mnist(withlabel=True)
 # Show the output
 x, t = test[0]
 # plt.imshow(x.reshape(28, 28), cmap='gray')
