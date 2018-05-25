@@ -61,8 +61,8 @@ def extract(midi_label, frame_num):
     return label_list
 
 
-def make_midi(midi_name, label_list):
-    mda.generate_head(midi_name)
+def make_midi(midi_name, label_list, iid):
+    mda.generate_head(midi_name, iid)
     cur_dir = os.path.split(os.path.realpath(__file__))[0]
     data_path = os.path.join(cur_dir, "database.txt")
     print(cur_dir)
@@ -92,14 +92,13 @@ def make_midi(midi_name, label_list):
 #     exit(0)
 
 if __name__ == '__main__':
-    fl = open("temp.txt")
+    fl = open("temp1.txt")
+    label_list = []
     temp = ""
     for x in fl:
         temp = temp + x
-    label_str = temp.split(",")
-    print(len(label_str))
-    label_list = []
+    label_str = temp.split()
     for x in label_str:
         label_list.append(int(x))
-    make_midi("temp.txt", label_list)
+    make_midi("temp", label_list)
     exit(0)
