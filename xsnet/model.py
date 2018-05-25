@@ -96,7 +96,7 @@ class XSNet(Chain):
                 # 想办法生成３个
                 for i in range(cur_max_index):
                     ys = self.xp.argmax(wy.data, axis=1).astype(np.int32)
-                    wy.data[ys]=-1
+                    wy.data[0][ys]=-1
                 result.append(ys)
 
             # Using `xp.concatenate(...)` instead of `xp.stack(result)` here to
