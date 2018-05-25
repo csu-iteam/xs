@@ -1,7 +1,7 @@
 import os, sys
 sys.path.append('..')
 import hashlib
-from chainer serializers
+from chainer import serializers
 from extractor import FramesExtractor, PoseExtractor, DataExtractor
 from generator import MidiGenerator, WavGenerator, Mp3Generator
 from datasets import load_midi_snippet
@@ -41,7 +41,7 @@ class XSNetPredictor(object):
         data = DataExtractor().extract(pose_path)
 
         model = self._init_model()
-        ret = model(data)
+        ret = model.translate(data)
 
         os.chdir(cur_dir)
         midi_txt_path = os.path.join(tmp_path,e_name)
@@ -53,6 +53,7 @@ class XSNetPredictor(object):
         Mp3Generator().generate(wav_path,ouput_mp3_path)
 
     def _init_model(self):
+        os.chdir(cur_dir)
         midi_ids = load_midi_snippet(self.midi_database_path)
         n_rhythm = len(midi_ids)
         model = XSNet(3, 54, n_rhythm, 1024)
