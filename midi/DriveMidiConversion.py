@@ -1,5 +1,6 @@
 import sys
 import os
+
 sys.path.append('./midi')
 cur_dir = os.path.split(os.path.realpath(__file__))[0]
 sys.path.append(cur_dir)
@@ -64,14 +65,22 @@ def make_midi(midi_name, label_list):
     mda.generate_head(midi_name)
     cur_dir = os.path.split(os.path.realpath(__file__))[0]
     data_path = os.path.join(cur_dir, "database.txt")
+    print(cur_dir)
+    print(data_path)
     dbi.load_database(data_path)
     for y in range(len(label_list)):
+        if y == (len(label_list) - 1):
+            end = True
+        else:
+            end = False
         on_change = dbi.find_on_and_off(label_list[y])
         position = mda.exchange_position(y, fps)
         for i in on_change[0]:
-            mda.generate(midi_name, position, True, i, 100)
+            if not end:
+                mda.generate(midi_name, position, True, i, 100)
         for i in on_change[1]:
             mda.generate(midi_name, position, False, i, 60)
+
     mda.generate_ending(midi_name)
 
 
@@ -88,8 +97,9 @@ if __name__ == '__main__':
     for x in fl:
         temp = temp + x
     label_str = temp.split(",")
+    print(len(label_str))
     label_list = []
     for x in label_str:
         label_list.append(int(x))
-    make_midi("temp.txt",label_list)
+    make_midi("temp.txt", label_list)
     exit(0)
