@@ -199,7 +199,7 @@ def test_analysis():
 
 def generate_head(music_name):
     mf = open(music_name + ".txt", "w")
-    mf.write(MFile + " " + "1 4" + " " + "480" + "\n")
+    mf.write(MFile + " " + "1 3" + " " + "480" + "\n")
     mf.write(MTrk + "\n")
     mf.write("0" + " " + Tempo + " " + "625000" + "\n")
     mf.write("0" + " " + KeySig + " " + "0 major" + "\n")
@@ -208,6 +208,7 @@ def generate_head(music_name):
     mf.write("0" + " " + Meta + " " + TrkEnd + "\n")
     mf.write(TrkEnd + "\n")
     mf.write(MTrk + "\n")
+    mf.write("0 Meta TrkName [GM 001] Acoustic Grand Piano\n")
     mf.close()
 
 
