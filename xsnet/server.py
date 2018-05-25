@@ -18,31 +18,12 @@ Build a server and export interface to user
 """
 import os
 import sys
-
 sys.path.append('..')
 from flask import Flask, render_template, request, flash, redirect, url_for, jsonify
 from werkzeug.utils import secure_filename
-import hashlib
-from model import XSNet
-from train import load_midi_snippet
-from midi.DriveMidiConversion import make_midi
-# import../ convert_to_dataset_with_label  as mk_data
-from extractor import FramesExtractor, PoseExtractor, DataExtractor
-import mimi
-import numpy as np
-from pydub import AudioSegment
-import numpy as np
-import chainer
-from chainer.backends import cuda
-from chainer import Function, gradient_check, report, training, utils, Variable
-from chainer import datasets, iterators, optimizers, serializers
-from chainer import Link, Chain, ChainList
-import chainer.functions as F
-import chainer.links as L
-from chainer.training import extensions
-import argparse
-from model import XSNet, Classifier
 import datetime
+import hashlib
+from predictor import XSNetPredictor
 app = Flask(__name__)
 
 UPLOAD_FOLDER = '/root/data/video/'
@@ -57,69 +38,6 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-def init_model():
-    """
-    加载标签数据库，加载模型
-    :return:
-    """
-    path = os.path.join(cur_dir, '../midi/database.txt')
-    target_midi_ids = load_midi_snippet(path)
-    target_midi_ids = {i: w for w, i in target_midi_ids.items()}
-    n_rhythm = len(target_midi_ids)
-    model = XSNet(3, 54, n_rhythm, 1024)
-
-    npz_path = cur_dir + '/result/model_epoch-294'
-    print('load model: {}'.format(npz_path))
-    serializers.load_npz(npz_path, model)
-    return model, target_midi_ids
-
-
-def call_t2mf(path, output_path):
-    """
-    调用t2mf，将txt文本转换为mid文件
-    :param path:
-    :param output_path:
-    :return:
-    """
-    cmd = 't2mf {} {}'.format(path, output_path)
-    print(cmd)
-    os.system(cmd)
-
-
-def call_midi2wav(path, output_path):
-    """
-    调用mimi,将mid文件转换为wav文件
-    :param path:
-    :param output_path:
-    :return:
-    """
-    mimi.output.midi2wav(path, output_path)
-
-
-def call_wav2mp3(path, output_path):
-    """
-    调用pydub，将wav文件转为mp3文件
-    :param path:
-    :param output_path:
-    :return:
-    """
-    song = AudioSegment.from_wav(path)
-    song.export(output_path, format="mp3")
-
-def convert_label_list_to_mp3(e_filename,ret):
-
-    os.chdir(cur_dir)
-    midi_txt_path = '/root/data/flask/txt/' + e_filename
-    make_midi(midi_txt_path, ret[0])
-    # 调用t2mf
-    midi_path = '/root/data/flask/midi/' + e_filename + '.mid'
-    call_t2mf(midi_txt_path + '.txt', midi_path)
-    wav_path = '/root/data/flask/wav/' + e_filename + '.wav'
-    call_midi2wav(midi_path, wav_path)
-    mp3_path = '/root/data/xs/xsnet/static/' + e_filename + '.mp3'
-    call_wav2mp3(wav_path, mp3_path)
-    midi_output_path = 'http://47.95.203.153/static/{}'.format(e_filename+'.mp3')
-    return midi_output_path
 def generate_music(path):
     """
     生成音乐，大致流程为
@@ -147,42 +65,12 @@ def generate_music(path):
     h1.update(filename.encode(encoding='utf-8'))
     e_filename = h1.hexdigest()
     print('cur name:{}'.format(e_filename))
-    
-    print('Extract frames...')
-    begin = datetime.datetime.now() 
-    frames_output_path = '/root/data/flask/frames/' + e_filename
-    ex = FramesExtractor()
-    ex.extract(path, frames_output_path)
-    end = datetime.datetime.now()
-    print('extract frames cost time: {}'.format(end-begin))
-    
-    begin = end
-    print('Extract pose...')
-    pose_output_path = '/root/data/flask/json/' + e_filename
-    ex = PoseExtractor('/root/data/openpose')
-    ex.extract(frames_output_path, pose_output_path)
-    end = datetime.datetime.now()
-    print('extract pose cost time: {}'.format(end-begin))
-
-    print('Extract data...')
-    begin = end
-    model, target_midi_ids = init_model()
-    # data = make_data(pose_output_path)
-    ex = DataExtractor()
-    # 这里需要测试
-    data = ex.extract(pose_output_path)
-    print('data: {} '.format(data))
-    print('extract data cost time: {}'.format(end-begin))
-    l_path = []
-    for i in range(3):
-        begin = end
-        ret = model.translate(data, cur_max_index = i+1)
-        print('predict result: {}'.format(ret[0]))
-        end = datetime.datetime.now()
-        print('predict seq cost time: {}'.format(end-begin))
-        path = convert_label_list_to_mp3('{}_{}'.format(e_filename,i),ret)
-        l_path.append(path)
-
+    openpose_root = '/root/data/openpose'
+    midi_database_path = '../midi/database.txt'
+    model_path = 'result/model_epoch-294'
+    p = XSNetPredictor(openpose_root, midi_database_path, model_path)
+    p.predict(path,'/root/data/xs/xsnet/static/{}.mp3'.format(e_filename),'/root/data/flask/xsnet')
+    l_path = ['http://47.95.203.153/static/{}'.format(e_filename+'.mp3')]
     return l_path
 
 

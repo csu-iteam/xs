@@ -20,9 +20,10 @@ For Audio, use midi file to construct data
 """
 import numpy as np
 from chainer.datasets import tuple_dataset
-import random
 
 EOS = 0
+
+
 def load_midi_snippet(path):
     """
     把所有的标签加１

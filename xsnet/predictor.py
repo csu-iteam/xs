@@ -1,7 +1,8 @@
 import os, sys
+
 sys.path.append('..')
 import hashlib
-from chainer serializers
+from chainer import serializers
 from extractor import FramesExtractor, PoseExtractor, DataExtractor
 from generator import MidiGenerator, WavGenerator, Mp3Generator
 from datasets import load_midi_snippet
@@ -9,6 +10,8 @@ from model import XSNet
 from midi.DriveMidiConversion import make_midi
 
 cur_dir = os.path.split(os.path.realpath(__file__))[0]
+
+
 class XSNetPredictor(object):
     def __init__(self, openpose_root, midi_database_path, model_path):
         self.openpose_root = openpose_root
@@ -41,27 +44,29 @@ class XSNetPredictor(object):
         data = DataExtractor().extract(pose_path)
 
         model = self._init_model()
-        ret = model(data)
+        ret = model.translate(data)
 
         os.chdir(cur_dir)
-        midi_txt_path = os.path.join(tmp_path,e_name)
-        midi_path = os.path.join(tmp_path,e_name+'.mid')
-        wav_path = os.path.join(tmp_path,e_name+'.wav')
+        midi_txt_path = os.path.join(tmp_path, e_name)
+        midi_path = os.path.join(tmp_path, e_name + '.mid')
+        wav_path = os.path.join(tmp_path, e_name + '.wav')
         make_midi(midi_txt_path, ret[0])
-        MidiGenerator().generate(midi_txt_path+'.txt',midi_path)
+        MidiGenerator().generate(midi_txt_path + '.txt', midi_path)
         WavGenerator().generate(midi_path, wav_path)
-        Mp3Generator().generate(wav_path,ouput_mp3_path)
+        Mp3Generator().generate(wav_path, ouput_mp3_path)
 
     def _init_model(self):
+        os.chdir(cur_dir)
         midi_ids = load_midi_snippet(self.midi_database_path)
         n_rhythm = len(midi_ids)
         model = XSNet(3, 54, n_rhythm, 1024)
         serializers.load_npz(self.model_path, model)
         return model
 
+
 if __name__ == '__main__':
     openpose_root = '/root/data/openpose'
     midi_database_path = '../midi/database.txt'
     model_path = 'result/model_epoch-294'
-    p = XSNetPredictor(openpose_root,midi_database_path,model_path)
-    p.predict('/root/data/Video113.mp4','/root/data/test.mp3')
+    p = XSNetPredictor(openpose_root, midi_database_path, model_path)
+    p.predict('/root/data/Video113.mp4', '/root/data/test.mp3')
