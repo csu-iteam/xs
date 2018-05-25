@@ -50,7 +50,7 @@ class XSNetPredictor(object):
         midi_txt_path = os.path.join(tmp_path, e_name)
         midi_path = os.path.join(tmp_path, e_name + '.mid')
         wav_path = os.path.join(tmp_path, e_name + '.wav')
-        make_midi(midi_txt_path, ret[0])
+        make_midi(midi_txt_path, ret[0], 15)
         MidiGenerator().generate(midi_txt_path + '.txt', midi_path)
         WavGenerator().generate(midi_path, wav_path)
         Mp3Generator().generate(wav_path, ouput_mp3_path)
@@ -69,4 +69,4 @@ if __name__ == '__main__':
     midi_database_path = '../midi/database.txt'
     model_path = 'result/model_epoch-294'
     p = XSNetPredictor(openpose_root, midi_database_path, model_path)
-    p.predict('/root/data/Video113.mp4', '/root/data/test.mp3')
+    p.predict('/root/data/Video100.mp4', '/root/data/tmp/test100.mp3')
