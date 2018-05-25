@@ -197,8 +197,8 @@ def test_analysis():
 #     test_analysis()
 #     exit(0)
 
-def generate_head(music_name):
-    mf = open(music_name+".txt", "w")
+def generate_head(music_name, iid):
+    mf = open(music_name + ".txt", "w")
     mf.write(MFile + " " + "1 3" + " " + "480" + "\n")
     mf.write(MTrk + "\n")
     mf.write("0" + " " + Tempo + " " + "1000000" + "\n")
@@ -208,7 +208,7 @@ def generate_head(music_name):
     mf.write("0" + " " + Meta + " " + TrkEnd + "\n")
     mf.write(TrkEnd + "\n")
     mf.write(MTrk + "\n")
-    mf.write("0 Meta TrkName \"[GM 001] Acoustic Grand Piano\"\n")
+    mf.write("0 PrCh ch=1 p=" + str(iid) + "\n")
     mf.close()
 
 
@@ -227,5 +227,5 @@ def generate_ending(music_name):
     mf.write(MTrk + "\n")
     mf.write("0" + " " + Meta + " " + TrkName + " " + "\"\\xffffffb1\\xffffffea\\xffffffbc\\xffffffc7\"" + "\n")
     mf.write("0" + " " + Meta + " " + TrkEnd + "\n")
-    mf.write(TrkEnd+"\n")
+    mf.write(TrkEnd + "\n")
     mf.close()
