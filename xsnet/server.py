@@ -22,11 +22,12 @@ from werkzeug.utils import secure_filename
 import hashlib
 from model import XSNet
 from train import load_midi_snippet
-
+from ../midi/DriveMidiConversion import make_midi
 # import../ convert_to_dataset_with_label  as mk_data
 from extractor import FramesExtractor, PoseExtractor, DataExtractor
-
+import mimi
 import numpy as np
+from pydub import AudioSegment
 
 app = Flask(__name__)
 
@@ -68,6 +69,18 @@ def make_data(path):
     return np.array(infos)
 
 
+def call_t2mf(path, output_path):
+    cmd = 't2mf {} {}'.format(path, output_path)
+    print(cmd)
+    os.system(cmd)
+
+def call_midi2wav(path, output_path):
+    mimi.output.midi2wav(path, output_path)
+
+def call_wav2mp3(path, output_path):
+    song = AudioSegment.from_wav(path)
+    song.export(output_path, format="mp3")
+
 def generate_music(path):
     # If it is not a video, throw an exception file type error
     if not os.path.exists(path):
@@ -94,17 +107,16 @@ def generate_music(path):
     data = ex.extract(pose_output_path)
     print('data: {} '.format(data))
     ret = model.translate(data)
-    
-    ret = map(lambda x: x.argmax(), ret.data)
-    print('ret: {}'.format(ret))
-    # 将序列转换为mp3文件，然后放在当前目录下的static文件夹中，返回给客户端
-    midi = []
-    for it in ret:
-        midi.append(target_midi_ids[it])
-    path = cur_dir + '/' + e_filename
-    # midi_output_path = '/root/data/flask/midi/' + e_filename
-    midi_output_path = path
-    np.savez(midi_output_path, np.array(midi))
+    midi_txt_path = '/root/data/flask/txt/' + e_filename
+    make_midi(midi_txt_path, ret[0])
+    # 调用t2mf
+    midi_path = '/root/data/flask/midi/' + e_filename
+    call_t2mf(midi_txt_path+'.txt',midi_path)
+    wav_path = '/root/data/flask/wav/' + e_filename
+    call_midi2wav(midi_path, wav_path)
+    mp3_path = '/root/data/xs/xsnet/static/' + e_filename
+    call_wav2mp3(wav_path, mp3_path)
+    midi_output_path = 'http://47.95.203.153/static/{}'.format(e_filename)
     return midi_output_path
 
 
