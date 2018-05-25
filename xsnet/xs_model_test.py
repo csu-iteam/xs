@@ -5,7 +5,10 @@ from train import handle_data, load_midi_snippet, convert
 import datasets
 from extractor import DataExtractor
 import cupy as cp
+from timer import timer
 
+
+@timer
 def my_test():
     ex = DataExtractor()
     ret = ex.extract('/home/pikachu/Documents/json/seve/Video1_clip.mp4')
@@ -19,10 +22,10 @@ def my_test():
     model.to_gpu()  # Copy the model to the GPU
     npz_path = 'result/model_epoch-80'
     serializers.load_npz(npz_path, model)
-    
-    ret = ret[0:min(len(ret),200)]
+
+    ret = ret[0:min(len(ret), 200)]
     ret = model.translate(cp.array(ret))
-    print(ret[0],len(ret[0]))
+    print(ret[0], len(ret[0]))
 
 
 if __name__ == '__main__':

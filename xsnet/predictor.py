@@ -10,7 +10,7 @@ from generator import MidiGenerator, WavGenerator, Mp3Generator
 from datasets import load_midi_snippet
 from model import XSNet
 from midi.DriveMidiConversion import make_midi
-
+from timer import timer
 cur_dir = os.path.split(os.path.realpath(__file__))[0]
 
 
@@ -20,7 +20,7 @@ class XSNetPredictor(object):
         self.midi_database_path = midi_database_path
         self.model_path = model_path
         self.device = device
-
+    @timer
     def predict(self, mp4_path, ouput_mp3_path, tmp_path=None):
         if not os.path.exists(mp4_path):
             raise Exception('file: {} not exist'.format(mp4_path))
