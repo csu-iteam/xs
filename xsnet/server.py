@@ -30,7 +30,17 @@ from extractor import FramesExtractor, PoseExtractor, DataExtractor
 import mimi
 import numpy as np
 from pydub import AudioSegment
-
+import numpy as np
+import chainer
+from chainer.backends import cuda
+from chainer import Function, gradient_check, report, training, utils, Variable
+from chainer import datasets, iterators, optimizers, serializers
+from chainer import Link, Chain, ChainList
+import chainer.functions as F
+import chainer.links as L
+from chainer.training import extensions
+import argparse
+from model import XSNet, Classifier
 app = Flask(__name__)
 
 UPLOAD_FOLDER = '/root/data/video/'
@@ -54,24 +64,6 @@ def init_model():
     npz_path = 'result/model_epoch-294'
     serializers.load_npz(npz_path, model)
     return model, target_midi_ids
-
-
-def make_data(path):
-    if not os.path.exists(path):
-        raise Exception(path, ' is not exist')
-    infos = []
-    for file in os.listdir(path):
-        info = mk_data.get_pose_info(file)
-
-        if info is None:
-            if last_info is None:
-                # raise Exception("Pose Info Error")
-                info = [0 for x in range(54)]
-            info = last_info
-        last_info = info
-        # 将节点信息存储下来
-        infos.append(info)
-    return np.array(infos)
 
 
 def call_t2mf(path, output_path):
@@ -100,11 +92,9 @@ def generate_music(path):
     frames_output_path = '/root/data/flask/frames/' + e_filename
     ex = FramesExtractor()
     # ex.extract(path, frames_output_path)
-    # extract_frame(path, frames_output_path)
     pose_output_path = '/root/data/flask/json/' + e_filename
     ex = PoseExtractor('/root/data/openpose')
     # ex.extract(frames_output_path, pose_output_path)
-    # extract_pose(frames_output_path, pose_output_path)
     model, target_midi_ids = init_model()
     # data = make_data(pose_output_path)
     ex = DataExtractor()
@@ -123,27 +113,6 @@ def generate_music(path):
     call_wav2mp3(wav_path, mp3_path)
     midi_output_path = 'http://47.95.203.153/static/{}'.format(e_filename)
     return midi_output_path
-
-
-def extract_frame(video_path, output_path):
-    basename = os.path.basename(video_path)
-    frames = 12
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
-    cmd = 'ffmpeg -i ' + video_path + ' -r ' + str(frames) + ' ' + output_path + '/' + basename + '.%4d.jpg > /dev/null'
-    os.system(cmd)
-
-
-def extract_pose(frame_dir, output_path):
-    OPENPOSE_ROOT = '/root/data/openpose/'
-    #  ./build/examples/openpose/openpose.bin --image_dir /home/pikachu/Desktop/test --write_json /home/pikachu/Desktop/test --net_resolution 192x144 --display 0
-    bin_path = OPENPOSE_ROOT + '/build/examples/openpose/openpose.bin'
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
-    cmd = bin_path + ' --image_dir ' + frame_dir + ' --write_json ' + output_path + ' --display 0 --keypoint_scale 3 > /dev/null'
-    os.system(cmd)
-    pass
-
 
 @app.route('/upload_file', methods=['GET'])
 def upload_index():
