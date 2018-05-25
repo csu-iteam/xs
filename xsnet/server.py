@@ -42,7 +42,7 @@ import chainer.links as L
 from chainer.training import extensions
 import argparse
 from model import XSNet, Classifier
-
+import datetime
 app = Flask(__name__)
 
 UPLOAD_FOLDER = '/root/data/video/'
@@ -68,7 +68,8 @@ def init_model():
     n_rhythm = len(target_midi_ids)
     model = XSNet(3, 54, n_rhythm, 1024)
 
-    npz_path = 'result/model_epoch-294'
+    npz_path = cur_dir + '/result/model_epoch-294'
+    print('load model: {}'.format(npz_path))
     serializers.load_npz(npz_path, model)
     return model, target_midi_ids
 
@@ -105,7 +106,20 @@ def call_wav2mp3(path, output_path):
     song = AudioSegment.from_wav(path)
     song.export(output_path, format="mp3")
 
+def convert_label_list_to_mp3(e_filename,ret):
 
+    os.chdir(cur_dir)
+    midi_txt_path = '/root/data/flask/txt/' + e_filename
+    make_midi(midi_txt_path, ret[0])
+    # 调用t2mf
+    midi_path = '/root/data/flask/midi/' + e_filename + '.mid'
+    call_t2mf(midi_txt_path + '.txt', midi_path)
+    wav_path = '/root/data/flask/wav/' + e_filename + '.wav'
+    call_midi2wav(midi_path, wav_path)
+    mp3_path = '/root/data/xs/xsnet/static/' + e_filename + '.mp3'
+    call_wav2mp3(wav_path, mp3_path)
+    midi_output_path = 'http://47.95.203.153/static/{}'.format(e_filename+'.mp3')
+    return midi_output_path
 def generate_music(path):
     """
     生成音乐，大致流程为
@@ -127,34 +141,49 @@ def generate_music(path):
     if not path.endswith('.mp4'):
         raise Exception('file is invalid')
     # Get filename
+    print('Encrypted file name...')
     filename = os.path.basename(path)
     h1 = hashlib.md5()
     h1.update(filename.encode(encoding='utf-8'))
     e_filename = h1.hexdigest()
+    print('cur name:{}'.format(e_filename))
+    
+    print('Extract frames...')
+    begin = datetime.datetime.now() 
     frames_output_path = '/root/data/flask/frames/' + e_filename
     ex = FramesExtractor()
-    # ex.extract(path, frames_output_path)
+    ex.extract(path, frames_output_path)
+    end = datetime.datetime.now()
+    print('extract frames cost time: {}'.format(end-begin))
+    
+    begin = end
+    print('Extract pose...')
     pose_output_path = '/root/data/flask/json/' + e_filename
     ex = PoseExtractor('/root/data/openpose')
-    # ex.extract(frames_output_path, pose_output_path)
+    ex.extract(frames_output_path, pose_output_path)
+    end = datetime.datetime.now()
+    print('extract pose cost time: {}'.format(end-begin))
+
+    print('Extract data...')
+    begin = end
     model, target_midi_ids = init_model()
     # data = make_data(pose_output_path)
     ex = DataExtractor()
     # 这里需要测试
     data = ex.extract(pose_output_path)
     print('data: {} '.format(data))
-    ret = model.translate(data)
-    midi_txt_path = '/root/data/flask/txt/' + e_filename
-    make_midi(midi_txt_path, ret[0])
-    # 调用t2mf
-    midi_path = '/root/data/flask/midi/' + e_filename + '.mid'
-    call_t2mf(midi_txt_path + '.txt', midi_path)
-    wav_path = '/root/data/flask/wav/' + e_filename + '.wav'
-    call_midi2wav(midi_path, wav_path)
-    mp3_path = '/root/data/xs/xsnet/static/' + e_filename + '.mp3'
-    call_wav2mp3(wav_path, mp3_path)
-    midi_output_path = 'http://47.95.203.153/static/{}'.format(e_filename)
-    return midi_output_path
+    print('extract data cost time: {}'.format(end-begin))
+    l_path = []
+    for i in range(3):
+        begin = end
+        ret = model.translate(data, cur_max_index = i+1)
+        print('predict result: {}'.format(ret[0]))
+        end = datetime.datetime.now()
+        print('predict seq cost time: {}'.format(end-begin))
+        path = convert_label_list_to_mp3('{}_{}'.format(e_filename,i),ret)
+        l_path.append(path)
+
+    return l_path
 
 
 @app.route('/upload_file', methods=['GET'])
@@ -191,12 +220,17 @@ def upload_file():
         ret['msg'] = 'No file part'
         return jsonify(ret)
     if file and allowed_file(file.filename):
+        begin = datetime.datetime.now()
         filename = secure_filename(file.filename)
         path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(path)
-        # path = generate_music(path)
-        url = 'http://47.95.203.153/static/my_test.mp3'
-        ret['data'] = [url, url, url]
+        urls = generate_music(path)
+        # url = 'http://47.95.203.153/static/my_test.mp3'
+        print('url: {}'.format(urls))
+        # ret['data'] = [url, url, url]
+        ret['data'] = urls
+        end = datetime.datetime.now()
+        print('total cost time: {}'.format(end-begin))
         return jsonify(ret)
     else:
         ret['status'] = False
@@ -206,6 +240,6 @@ def upload_file():
 
 
 if __name__ == '__main__':
-    # app.run(host='0.0.0.0', port=80, debug=True)
-    path = '/root/data/video/v1.mp4'
-    generate_music(path)
+    app.run(host='0.0.0.0', port=80, debug=True)
+    # path = '/root/data/video/v1.mp4'
+    # generate_music(path)
