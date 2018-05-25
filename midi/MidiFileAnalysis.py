@@ -199,7 +199,7 @@ def test_analysis():
 
 def generate_head(music_name):
     mf = open(music_name + ".txt", "w")
-    mf.write(MFile + " " + "1 4" + "480" + "\n")
+    mf.write(MFile + " " + "1 4" + " " + "480" + "\n")
     mf.write(MTrk + "\n")
     mf.write("0" + " " + Tempo + " " + "625000" + "\n")
     mf.write("0" + " " + KeySig + " " + "0 major" + "\n")
@@ -214,9 +214,9 @@ def generate_head(music_name):
 def generate(music_name, position, is_on, n, v):
     mf = open(music_name + ".txt", "a")
     if is_on:
-        mf.write(position + " " + On + " " + "ch=1" + " " + "n=" + n + " " + "v=" + v + "\n")
+        mf.write(str(int(round(position))) + " " + On + " " + "ch=1" + " " + "n=" + str(n) + " " + "v=" + str(v) + "\n")
     else:
-        mf.write(position + " " + Off + " " + "ch=1" + " " + "n=" + n + " " + "v=" + v + "\n")
+        mf.write(str(int(round(position))) + " " + Off + " " + "ch=1" + " " + "n=" + str(n) + " " + "v=" + str(v) + "\n")
 
 
 def generate_ending(music_name):

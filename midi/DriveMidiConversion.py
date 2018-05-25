@@ -42,7 +42,7 @@ def init_midi():
 
 def extract(midi_label, frame_num):
     cur_dir = os.path.split(os.path.realpath(__file__))[0]
-    data_path =os.path.join(cur_dir,"database.txt")
+    data_path = os.path.join(cur_dir, "database.txt")
     dbi.load_database(data_path)
     file_list = []
     # Get Current Directory
@@ -62,6 +62,9 @@ def extract(midi_label, frame_num):
 
 def make_midi(midi_name, label_list):
     mda.generate_head(midi_name)
+    cur_dir = os.path.split(os.path.realpath(__file__))[0]
+    data_path = os.path.join(cur_dir, "database.txt")
+    dbi.load_database(data_path)
     for y in range(len(label_list)):
         on_change = dbi.find_on_and_off(label_list[y])
         position = mda.exchange_position(y, fps)
@@ -69,11 +72,24 @@ def make_midi(midi_name, label_list):
             mda.generate(midi_name, position, True, i, 100)
         for i in on_change[1]:
             mda.generate(midi_name, position, False, i, 60)
+    mda.generate_ending(midi_name)
 
+
+# if __name__ == '__main__':
+#     # label_list = extract(5, 3000)
+#     # print label_list
+#     for x in range(7):
+#         extract(x, 3000)
+#     exit(0)
 
 if __name__ == '__main__':
-    # label_list = extract(5, 3000)
-    # print label_list
-    for x in range(7):
-        extract(x, 3000)
+    fl = open("temp.txt")
+    temp = ""
+    for x in fl:
+        temp = temp + x
+    label_str = temp.split(",")
+    label_list = []
+    for x in label_str:
+        label_list.append(int(x))
+    make_midi("temp.txt",label_list)
     exit(0)
