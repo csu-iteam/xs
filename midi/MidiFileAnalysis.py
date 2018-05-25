@@ -208,7 +208,7 @@ def generate_head(music_name):
     mf.write("0" + " " + Meta + " " + TrkEnd + "\n")
     mf.write(TrkEnd + "\n")
     mf.write(MTrk + "\n")
-    mf.write("0 Meta TrkName [GM 001] Acoustic Grand Piano\n")
+    mf.write("0 Meta TrkName \"[GM 001] Acoustic Grand Piano\"\n")
     mf.close()
 
 
@@ -217,14 +217,15 @@ def generate(music_name, position, is_on, n, v):
     if is_on:
         mf.write(str(int(round(position))) + " " + On + " " + "ch=1" + " " + "n=" + str(n) + " " + "v=" + str(v) + "\n")
     else:
-        mf.write(str(int(round(position))) + " " + Off + " " + "ch=1" + " " + "n=" + str(n) + " " + "v=" + str(v) + "\n")
+        mf.write(
+            str(int(round(position))) + " " + Off + " " + "ch=1" + " " + "n=" + str(n) + " " + "v=" + str(v) + "\n")
 
 
 def generate_ending(music_name):
     mf = open(music_name + ".txt", "a")
     mf.write(TrkEnd + "\n")
     mf.write(MTrk + "\n")
-    mf.write("0" + " " + Meta + " " + TrkName + "\"\\xffffffb1\\xffffffea\\xffffffbc\\xffffffc7\"" + "\n")
+    mf.write("0" + " " + Meta + " " + TrkName + " " + "\"\\xffffffb1\\xffffffea\\xffffffbc\\xffffffc7\"" + "\n")
     mf.write("0" + " " + Meta + " " + TrkEnd + "\n")
-    mf.write(TrkEnd)
+    mf.write(TrkEnd+"\n")
     mf.close()
