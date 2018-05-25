@@ -176,7 +176,7 @@ def generate_music(path):
     l_path = []
     for i in range(3):
         begin = end
-        ret = model.translate(data)
+        ret = model.translate(data, cur_max_index = i+1)
         print('predict result: {}'.format(ret[0]))
         end = datetime.datetime.now()
         print('predict seq cost time: {}'.format(end-begin))
