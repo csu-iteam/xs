@@ -94,9 +94,16 @@ class XSNet(Chain):
                 cys = F.concat(ys, axis=0)
                 wy = self.W(cys)
                 # 想办法生成３个
+                tmp = []
                 for i in range(cur_max_index):
                     ys = self.xp.argmax(wy.data, axis=1).astype(np.int32)
+                    t = wy.data[0][ys]
+                    tmp.append((ys,t))
                     wy.data[0][ys]=-1
+                # 把它复原，看能不能那么乱
+                for i in range(cur_max_index):
+                    ys,t = tmp[i]
+                    wy.data[0][ys] = t
                 result.append(ys)
 
             # Using `xp.concatenate(...)` instead of `xp.stack(result)` here to
