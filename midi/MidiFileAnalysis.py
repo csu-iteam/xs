@@ -198,7 +198,7 @@ def test_analysis():
 #     exit(0)
 
 def generate_head(music_name):
-    mf = open(music_name, "w")
+    mf = open(music_name+".txt", "w")
     mf.write(MFile + " " + "1 3" + " " + "480" + "\n")
     mf.write(MTrk + "\n")
     mf.write("0" + " " + Tempo + " " + "625000" + "\n")
