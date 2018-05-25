@@ -3,6 +3,8 @@ import os, sys
 sys.path.append('..')
 import hashlib
 from chainer import serializers
+import chainer.backends
+import cupy as cp
 from extractor import FramesExtractor, PoseExtractor, DataExtractor
 from generator import MidiGenerator, WavGenerator, Mp3Generator
 from datasets import load_midi_snippet
@@ -13,10 +15,11 @@ cur_dir = os.path.split(os.path.realpath(__file__))[0]
 
 
 class XSNetPredictor(object):
-    def __init__(self, openpose_root, midi_database_path, model_path):
+    def __init__(self, openpose_root, midi_database_path, model_path, device=0):
         self.openpose_root = openpose_root
         self.midi_database_path = midi_database_path
         self.model_path = model_path
+        self.device = device
 
     def predict(self, mp4_path, ouput_mp3_path, tmp_path=None):
         if not os.path.exists(mp4_path):
@@ -44,7 +47,9 @@ class XSNetPredictor(object):
         data = DataExtractor().extract(pose_path)
 
         model = self._init_model()
-        ret = model.translate(data)
+        chainer.backends.cuda.get_device_from_id(0).use()
+        model.to_gpu()  # Copy the model to the GPU
+        ret = model.translate(cp.array(data))
 
         os.chdir(cur_dir)
         midi_txt_path = os.path.join(tmp_path, e_name)
