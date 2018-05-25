@@ -17,17 +17,31 @@
 Build a server and export interface to user
 """
 import os
+import sys
+
+sys.path.append('..')
 from flask import Flask, render_template, request, flash, redirect, url_for, jsonify
 from werkzeug.utils import secure_filename
 import hashlib
 from model import XSNet
 from train import load_midi_snippet
-from ../midi/DriveMidiConversion import make_midi
+from midi.DriveMidiConversion import make_midi
 # import../ convert_to_dataset_with_label  as mk_data
 from extractor import FramesExtractor, PoseExtractor, DataExtractor
 import mimi
 import numpy as np
 from pydub import AudioSegment
+import numpy as np
+import chainer
+from chainer.backends import cuda
+from chainer import Function, gradient_check, report, training, utils, Variable
+from chainer import datasets, iterators, optimizers, serializers
+from chainer import Link, Chain, ChainList
+import chainer.functions as F
+import chainer.links as L
+from chainer.training import extensions
+import argparse
+from model import XSNet, Classifier
 
 app = Flask(__name__)
 
@@ -38,50 +52,75 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['SECRET_KEY'] = os.urandom(24)
 cur_dir = os.path.split(os.path.realpath(__file__))[0]
 
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 def init_model():
+    """
+    加载标签数据库，加载模型
+    :return:
+    """
     path = os.path.join(cur_dir, '../midi/database.txt')
     target_midi_ids = load_midi_snippet(path)
     target_midi_ids = {i: w for w, i in target_midi_ids.items()}
     n_rhythm = len(target_midi_ids)
     model = XSNet(3, 54, n_rhythm, 1024)
+
+    npz_path = 'result/model_epoch-294'
+    serializers.load_npz(npz_path, model)
     return model, target_midi_ids
 
 
-def make_data(path):
-    if not os.path.exists(path):
-        raise Exception(path, ' is not exist')
-    infos = []
-    for file in os.listdir(path):
-        info = mk_data.get_pose_info(file)
-
-        if info is None:
-            if last_info is None:
-                # raise Exception("Pose Info Error")
-                info = [0 for x in range(54)]
-            info = last_info
-        last_info = info
-        # 将节点信息存储下来
-        infos.append(info)
-    return np.array(infos)
-
-
 def call_t2mf(path, output_path):
+    """
+    调用t2mf，将txt文本转换为mid文件
+    :param path:
+    :param output_path:
+    :return:
+    """
     cmd = 't2mf {} {}'.format(path, output_path)
     print(cmd)
     os.system(cmd)
 
+
 def call_midi2wav(path, output_path):
+    """
+    调用mimi,将mid文件转换为wav文件
+    :param path:
+    :param output_path:
+    :return:
+    """
     mimi.output.midi2wav(path, output_path)
 
+
 def call_wav2mp3(path, output_path):
+    """
+    调用pydub，将wav文件转为mp3文件
+    :param path:
+    :param output_path:
+    :return:
+    """
     song = AudioSegment.from_wav(path)
     song.export(output_path, format="mp3")
 
+
 def generate_music(path):
+    """
+    生成音乐，大致流程为
+    将视频变成图片帧 12帧每秒
+    使用openpose提取节点信息
+    规整输入
+    使用xsnet进行预测
+    根据预测得到的标签，生成txt文本
+    将txt文本转换为mid文件
+    将mid文件转换为wav文件
+    将wav文件转换为mp3文件
+    返回mp3文件的URL地址，相对服务器的
+    :param path:
+    :return:
+    """
     # If it is not a video, throw an exception file type error
     if not os.path.exists(path):
         raise Exception('file: {}  not exist'.format(path))
@@ -94,12 +133,10 @@ def generate_music(path):
     e_filename = h1.hexdigest()
     frames_output_path = '/root/data/flask/frames/' + e_filename
     ex = FramesExtractor()
-    ex.extract(path, frames_output_path)
-    # extract_frame(path, frames_output_path)
+    # ex.extract(path, frames_output_path)
     pose_output_path = '/root/data/flask/json/' + e_filename
     ex = PoseExtractor('/root/data/openpose')
-    ex.extract(frames_output_path, pose_output_path)
-    # extract_pose(frames_output_path, pose_output_path)
+    # ex.extract(frames_output_path, pose_output_path)
     model, target_midi_ids = init_model()
     # data = make_data(pose_output_path)
     ex = DataExtractor()
@@ -110,34 +147,14 @@ def generate_music(path):
     midi_txt_path = '/root/data/flask/txt/' + e_filename
     make_midi(midi_txt_path, ret[0])
     # 调用t2mf
-    midi_path = '/root/data/flask/midi/' + e_filename
-    call_t2mf(midi_txt_path+'.txt',midi_path)
-    wav_path = '/root/data/flask/wav/' + e_filename
+    midi_path = '/root/data/flask/midi/' + e_filename + '.mid'
+    call_t2mf(midi_txt_path + '.txt', midi_path)
+    wav_path = '/root/data/flask/wav/' + e_filename + '.wav'
     call_midi2wav(midi_path, wav_path)
-    mp3_path = '/root/data/xs/xsnet/static/' + e_filename
+    mp3_path = '/root/data/xs/xsnet/static/' + e_filename + '.mp3'
     call_wav2mp3(wav_path, mp3_path)
     midi_output_path = 'http://47.95.203.153/static/{}'.format(e_filename)
     return midi_output_path
-
-
-def extract_frame(video_path, output_path):
-    basename = os.path.basename(video_path)
-    frames = 12
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
-    cmd = 'ffmpeg -i ' + video_path + ' -r ' + str(frames) + ' ' + output_path + '/' + basename + '.%4d.jpg > /dev/null'
-    os.system(cmd)
-
-
-def extract_pose(frame_dir, output_path):
-    OPENPOSE_ROOT = '/root/data/openpose/'
-    #  ./build/examples/openpose/openpose.bin --image_dir /home/pikachu/Desktop/test --write_json /home/pikachu/Desktop/test --net_resolution 192x144 --display 0
-    bin_path = OPENPOSE_ROOT + '/build/examples/openpose/openpose.bin'
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
-    cmd = bin_path + ' --image_dir ' + frame_dir + ' --write_json ' + output_path + ' --display 0 --keypoint_scale 3 > /dev/null'
-    os.system(cmd)
-    pass
 
 
 @app.route('/upload_file', methods=['GET'])
@@ -187,7 +204,8 @@ def upload_file():
         ret['msg'] = 'File not valid. Please upload .mp4 file.'
         return jsonify(ret)
 
-if __name__=='__main__':
-    app.run(host='0.0.0.0', port=80, debug=True)
-    # path = '/root/data/video/v1.mp4'
-    # generate_music(path)
+
+if __name__ == '__main__':
+    # app.run(host='0.0.0.0', port=80, debug=True)
+    path = '/root/data/video/v1.mp4'
+    generate_music(path)
