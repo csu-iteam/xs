@@ -58,6 +58,10 @@ def allowed_file(filename):
 
 
 def init_model():
+    """
+    加载标签数据库，加载模型
+    :return:
+    """
     path = os.path.join(cur_dir, '../midi/database.txt')
     target_midi_ids = load_midi_snippet(path)
     target_midi_ids = {i: w for w, i in target_midi_ids.items()}
@@ -70,21 +74,53 @@ def init_model():
 
 
 def call_t2mf(path, output_path):
+    """
+    调用t2mf，将txt文本转换为mid文件
+    :param path:
+    :param output_path:
+    :return:
+    """
     cmd = 't2mf {} {}'.format(path, output_path)
     print(cmd)
     os.system(cmd)
 
 
 def call_midi2wav(path, output_path):
+    """
+    调用mimi,将mid文件转换为wav文件
+    :param path:
+    :param output_path:
+    :return:
+    """
     mimi.output.midi2wav(path, output_path)
 
 
 def call_wav2mp3(path, output_path):
+    """
+    调用pydub，将wav文件转为mp3文件
+    :param path:
+    :param output_path:
+    :return:
+    """
     song = AudioSegment.from_wav(path)
     song.export(output_path, format="mp3")
 
 
 def generate_music(path):
+    """
+    生成音乐，大致流程为
+    将视频变成图片帧 12帧每秒
+    使用openpose提取节点信息
+    规整输入
+    使用xsnet进行预测
+    根据预测得到的标签，生成txt文本
+    将txt文本转换为mid文件
+    将mid文件转换为wav文件
+    将wav文件转换为mp3文件
+    返回mp3文件的URL地址，相对服务器的
+    :param path:
+    :return:
+    """
     # If it is not a video, throw an exception file type error
     if not os.path.exists(path):
         raise Exception('file: {}  not exist'.format(path))
