@@ -17,12 +17,14 @@
 Build a server and export interface to user
 """
 import os
+import sys
+sys.path.append('..')
 from flask import Flask, render_template, request, flash, redirect, url_for, jsonify
 from werkzeug.utils import secure_filename
 import hashlib
 from model import XSNet
 from train import load_midi_snippet
-from ../midi/DriveMidiConversion import make_midi
+from midi.DriveMidiConversion import make_midi
 # import../ convert_to_dataset_with_label  as mk_data
 from extractor import FramesExtractor, PoseExtractor, DataExtractor
 import mimi
@@ -48,6 +50,9 @@ def init_model():
     target_midi_ids = {i: w for w, i in target_midi_ids.items()}
     n_rhythm = len(target_midi_ids)
     model = XSNet(3, 54, n_rhythm, 1024)
+    
+    npz_path = 'result/model_epoch-294'
+    serializers.load_npz(npz_path, model)
     return model, target_midi_ids
 
 
@@ -94,11 +99,11 @@ def generate_music(path):
     e_filename = h1.hexdigest()
     frames_output_path = '/root/data/flask/frames/' + e_filename
     ex = FramesExtractor()
-    ex.extract(path, frames_output_path)
+    # ex.extract(path, frames_output_path)
     # extract_frame(path, frames_output_path)
     pose_output_path = '/root/data/flask/json/' + e_filename
     ex = PoseExtractor('/root/data/openpose')
-    ex.extract(frames_output_path, pose_output_path)
+    # ex.extract(frames_output_path, pose_output_path)
     # extract_pose(frames_output_path, pose_output_path)
     model, target_midi_ids = init_model()
     # data = make_data(pose_output_path)
@@ -110,11 +115,11 @@ def generate_music(path):
     midi_txt_path = '/root/data/flask/txt/' + e_filename
     make_midi(midi_txt_path, ret[0])
     # 调用t2mf
-    midi_path = '/root/data/flask/midi/' + e_filename
+    midi_path = '/root/data/flask/midi/' + e_filename+'.mid'
     call_t2mf(midi_txt_path+'.txt',midi_path)
-    wav_path = '/root/data/flask/wav/' + e_filename
+    wav_path = '/root/data/flask/wav/' + e_filename+'.wav'
     call_midi2wav(midi_path, wav_path)
-    mp3_path = '/root/data/xs/xsnet/static/' + e_filename
+    mp3_path = '/root/data/xs/xsnet/static/' + e_filename+'.mp3'
     call_wav2mp3(wav_path, mp3_path)
     midi_output_path = 'http://47.95.203.153/static/{}'.format(e_filename)
     return midi_output_path
@@ -188,6 +193,6 @@ def upload_file():
         return jsonify(ret)
 
 if __name__=='__main__':
-    app.run(host='0.0.0.0', port=80, debug=True)
-    # path = '/root/data/video/v1.mp4'
-    # generate_music(path)
+    # app.run(host='0.0.0.0', port=80, debug=True)
+    path = '/root/data/video/v1.mp4'
+    generate_music(path)
