@@ -1201,6 +1201,7 @@ MTrk
 7120 Off ch=1 n=71 v=60
 7160 Off ch=1 n=63 v=60
 7160 Off ch=1 n=78 v=60
+7160 Meta TrkEnd
 TrkEnd
 MTrk
 0 Meta TrkName"\xffffffb1\xffffffea\xffffffbc\xffffffc7"
