@@ -18,6 +18,7 @@ Build a server and export interface to user
 """
 import os
 import sys
+
 sys.path.append('..')
 from flask import Flask, render_template, request, flash, redirect, url_for, jsonify
 from werkzeug.utils import secure_filename
@@ -41,6 +42,7 @@ import chainer.links as L
 from chainer.training import extensions
 import argparse
 from model import XSNet, Classifier
+
 app = Flask(__name__)
 
 UPLOAD_FOLDER = '/root/data/video/'
@@ -49,6 +51,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 app.config['SECRET_KEY'] = os.urandom(24)
 cur_dir = os.path.split(os.path.realpath(__file__))[0]
+
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -60,7 +63,7 @@ def init_model():
     target_midi_ids = {i: w for w, i in target_midi_ids.items()}
     n_rhythm = len(target_midi_ids)
     model = XSNet(3, 54, n_rhythm, 1024)
-    
+
     npz_path = 'result/model_epoch-294'
     serializers.load_npz(npz_path, model)
     return model, target_midi_ids
@@ -71,12 +74,15 @@ def call_t2mf(path, output_path):
     print(cmd)
     os.system(cmd)
 
+
 def call_midi2wav(path, output_path):
     mimi.output.midi2wav(path, output_path)
+
 
 def call_wav2mp3(path, output_path):
     song = AudioSegment.from_wav(path)
     song.export(output_path, format="mp3")
+
 
 def generate_music(path):
     # If it is not a video, throw an exception file type error
@@ -105,14 +111,15 @@ def generate_music(path):
     midi_txt_path = '/root/data/flask/txt/' + e_filename
     make_midi(midi_txt_path, ret[0])
     # 调用t2mf
-    midi_path = '/root/data/flask/midi/' + e_filename+'.mid'
-    call_t2mf(midi_txt_path+'.txt',midi_path)
-    wav_path = '/root/data/flask/wav/' + e_filename+'.wav'
+    midi_path = '/root/data/flask/midi/' + e_filename + '.mid'
+    call_t2mf(midi_txt_path + '.txt', midi_path)
+    wav_path = '/root/data/flask/wav/' + e_filename + '.wav'
     call_midi2wav(midi_path, wav_path)
-    mp3_path = '/root/data/xs/xsnet/static/' + e_filename+'.mp3'
+    mp3_path = '/root/data/xs/xsnet/static/' + e_filename + '.mp3'
     call_wav2mp3(wav_path, mp3_path)
     midi_output_path = 'http://47.95.203.153/static/{}'.format(e_filename)
     return midi_output_path
+
 
 @app.route('/upload_file', methods=['GET'])
 def upload_index():
@@ -161,7 +168,8 @@ def upload_file():
         ret['msg'] = 'File not valid. Please upload .mp4 file.'
         return jsonify(ret)
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
     # app.run(host='0.0.0.0', port=80, debug=True)
     path = '/root/data/video/v1.mp4'
     generate_music(path)
