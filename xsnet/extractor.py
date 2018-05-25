@@ -120,7 +120,7 @@ class DataExtractor(object):
         if people is None:
             raise Exception('data: {} has not people info'.format(data))
         if len(people) == 0:
-            print('file: {} has not pose info'.format(json_file_path))
+            # print('file: {} has not pose info'.format(json_file_path))
             return None
         else:
             return people[0]['pose_keypoints_2d']
