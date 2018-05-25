@@ -57,7 +57,7 @@ def match_pitch_combination(pc):
 
 
 # main entry
-def make_data(fps,l_list, frame):
+def make_data(fps, l_list, frame):
     point_start = 0
     now = 0
     step = 600 / fps
@@ -89,6 +89,7 @@ def find_pitch(pitch_list, pitch):
 def find_on_and_off(label):
     on = []
     off = []
+
     for i in range(len(now_pitch)):
         now_pitch.pop()
     for x in data[label]:
@@ -98,6 +99,10 @@ def find_on_and_off(label):
     for y in pre_pitch:
         if find_pitch(now_pitch, y) == -1:
             off.append(y)
+    for x in range(len(pre_pitch)):
+        pre_pitch.pop()
+    for x in now_pitch:
+        pre_pitch.append(x)
     return [on, off]
 
 
