@@ -2,9 +2,10 @@ import os, sys
 import os.path
 from pydub import AudioSegment
 import mimi
-
+from timer import timer
 
 class Mp3Generator(object):
+    @timer
     def generate(self, wav_path, output_path):
         if not os.path.exists(wav_path):
             raise Exception('file: {} not exist'.format(wav_path))
@@ -18,6 +19,7 @@ class Mp3Generator(object):
 
 
 class WavGenerator(object):
+    @timer
     def generate(self, midi_file_path, output_path):
         if not os.path.exists(midi_file_path):
             raise Exception('file: {} not exist'.format(midi_file_path))
@@ -30,6 +32,7 @@ class WavGenerator(object):
 
 
 class MidiGenerator(object):
+    @timer
     def generate(self, midi_txt_file_path, output_path):
         if not os.path.exists(midi_txt_file_path):
             raise Exception('file: {} not exist'.format(midi_txt_file_path))
