@@ -48,7 +48,6 @@ class FramesExtractor(object):
     """
     Use ffmpeg to extract frames
     """
-    @timer
     def extract(self, video_path, output_path, frames=12, with_output=False, show_cmd=True):
         if not os.path.exists(video_path):
             raise Exception('video file not exist')
@@ -81,7 +80,6 @@ class PoseExtractor(object):
         self.openpose_root_path = openpose_root_path
         self.openpose_bin_path = os.path.join(openpose_root_path, 'build/examples/openpose/openpose.bin')
 
-    @timer
     def extract(self, frames_path, output_path, with_output=False, show_cmd=True):
         os.chdir(self.openpose_root_path)
         cmd = '{} --image_dir {} --write_json {} --display 0 --keypoint_scale 3'.format(self.openpose_bin_path,
@@ -145,7 +143,6 @@ class DataExtractor(object):
 
         return data
 
-    @timer
     def extract(self, json_path):
 
         if not os.path.exists(json_path):
