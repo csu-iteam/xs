@@ -7,7 +7,7 @@ def timer(label=None):
         def wrapper(*args, **kwargs):
             begin = datetime.datetime.now()
             logging.info('{} is running'.format(func.__name__))
-            ret = func(*args)
+            ret = func(*args, **kwargs)
             end = datetime.datetime.now()
             if label is None:
                 title = func.__name__
