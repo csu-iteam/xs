@@ -28,5 +28,17 @@ def my_test():
     print(ret[0], len(ret[0]))
 
 
+@timer
+def my_test_2(a):
+    print('t')
+    print('发生了什么')
+
+@timer
+def my_test_3():
+    print('t')
+    print('发生了什么')
+
 if __name__ == '__main__':
-    my_test()
+    # my_test()
+    my_test_2(1)
+    # my_test_3()
