@@ -69,8 +69,8 @@ def generate_music(path):
     midi_database_path = '../midi/database.txt'
     model_path = 'result/model_epoch-294'
     p = XSNetPredictor(openpose_root, midi_database_path, model_path)
-    p.predict(path,'/root/data/xs/xsnet/static/{}.mp3'.format(e_filename),'/root/data/flask/xsnet')
-    l_path = ['http://47.95.203.153/static/{}'.format(e_filename+'.mp3')]
+    l = p.predict(path,'/root/data/xs/xsnet/static/{}.mp3'.format(e_filename),'/root/data/flask/xsnet')
+    l_path = ['http://47.95.203.153/static/{}'.format(it) for it in l]
     return l_path
 
 

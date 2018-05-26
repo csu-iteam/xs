@@ -22,6 +22,18 @@ class XSNetPredictor(object):
         self.model_path = model_path
         self.device = device
 
+    def generate(self, midi_txt_path, ret, id, tmp_path, e_name, ouput_mp3_path):
+        e_name = '{}_{}'.format(e_name,id)
+        make_midi(midi_txt_path, ret[0], id)
+        midi_path = os.path.join(tmp_path, e_name + '.mid')
+        wav_path = os.path.join(tmp_path, e_name + '.wav')
+        MidiGenerator().generate(midi_txt_path + '.txt', midi_path)
+        WavGenerator().generate(midi_path, wav_path)
+        dir_path = os.path.dirname(ouput_mp3_path)
+        ouput_mp3_path = os.path.join(dir_path,e_name+'.mp3')
+        Mp3Generator().generate(wav_path, ouput_mp3_path)
+        return e_name+'.mp3'
+
     def predict(self, mp4_path, ouput_mp3_path, tmp_path=None):
         if not os.path.exists(mp4_path):
             raise Exception('file: {} not exist'.format(mp4_path))
@@ -54,12 +66,12 @@ class XSNetPredictor(object):
 
         os.chdir(cur_dir)
         midi_txt_path = os.path.join(tmp_path, e_name)
-        midi_path = os.path.join(tmp_path, e_name + '.mid')
-        wav_path = os.path.join(tmp_path, e_name + '.wav')
-        make_midi(midi_txt_path, ret[0], 15)
-        MidiGenerator().generate(midi_txt_path + '.txt', midi_path)
-        WavGenerator().generate(midi_path, wav_path)
-        Mp3Generator().generate(wav_path, ouput_mp3_path)
+        l = []
+        # 钢琴　吉他　小提琴　贝司
+        for id in [0, 24, 40, 32]:
+            path = self.generate(midi_txt_path, ret, id, tmp_path, e_name, ouput_mp3_path)
+            l.append(path)
+        return l
 
     def _init_model(self):
         os.chdir(cur_dir)
